@@ -8,7 +8,7 @@ import CustomerManagement from "./Pages/CustomerManagement";
 
 import EventManagement from "./Pages/Event";
 
-import ProductManagement from "./Pages/Produk";
+import ProductManagement from "./Pages/ProdukManagement";
 import SalesManagement from "./Pages/SalesManagement";
 import Reservasi from "./Pages/Reservasi";
 
