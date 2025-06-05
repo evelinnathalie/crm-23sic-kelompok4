@@ -4,6 +4,8 @@ const initialEvents = [
   { id: 1, name: "Melati Daeva", email: "melati@mail.com", phone: "081234568392", lomba: "Mobile Legend", active: true },
   { id: 2, name: "Kevin Sanjaya", email: "kevin@mail.com", phone: "089749339294", lomba: "Mobile Legend", active: false },
   { id: 3, name: "Praven Jordan", email: "praven@mail.com", phone: "081523828928", lomba: "Mobile Legend", active: true },
+  { id: 4, name: "Jordan", email: "paven@mail.com", phone: "081523828928", lomba: "Mobile Legend", active: true },
+  
 ];
 
 export default function EventManagement() {
