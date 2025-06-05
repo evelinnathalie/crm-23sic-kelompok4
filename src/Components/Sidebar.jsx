@@ -8,8 +8,6 @@ import {
   UserPlus,
   User2,
 
-  Bell,
-
   CarTaxiFront,
   Bell,
   Camera,
