@@ -1,21 +1,20 @@
-import { Routes,Route } from "react-router-dom";
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 import MainLayout from "./Components/MainLayout";
 import Dashboard from "./Pages/Dashboard";
-import CustomerManagement from "./Pages/CustomerManagement";
-import ProductManagement from "./Pages/Produk";
-import SalesManagement from "./Pages/SalesManagement";
+import Pesanan from "./Pages/Pesanan";
+import Menu from "./Pages/Menu";
 
 function App() {
-  return(
+  return (
     <Routes>
       <Route element={<MainLayout />}>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/pelanggan" element={<CustomerManagement />} />
-      <Route path="/produk" element={<ProductManagement />} />
-      <Route path="/penjualan" element={<SalesManagement />} />
+        <Route index element={<Dashboard />} />
+        <Route path="pesanan" element={<Pesanan />} />
+        <Route path="menu" element={<Menu />} />
       </Route>
     </Routes>
-  )
+  );
 }
 
 export default App;
