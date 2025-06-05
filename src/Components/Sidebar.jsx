@@ -10,6 +10,8 @@ import {
   UserPlus,
   User2,
   CarTaxiFront,
+  Bell,
+  Camera,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -19,6 +21,7 @@ const menuItems = [
   { name: 'Pelanggan', icon: <User2 />, path: '/pelanggan' },
   { name: 'Penjualan', icon: <ShoppingCart />, path: '/penjualan' },
   { name: 'Laporan', icon: <BarChart2 />, path: '/laporan' },
+  { name: 'Reservasi', icon: <Bell/>, path: '/reservasi' },
 ]
 
 const accountItems = [
