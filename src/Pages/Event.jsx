@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 
-const initialCustomers = [
-  { id: 1, name: "Budi Santoso", email: "budi@mail.com", phone: "081234567890", active: true },
-  { id: 2, name: "Siti Aminah", email: "siti@mail.com", phone: "089876543210", active: false },
-  { id: 3, name: "Andi Wijaya", email: "andi@mail.com", phone: "081299988877", active: true },
+const initialEvents = [
+  { id: 1, name: "Melati Daeva", email: "melati@mail.com", phone: "081234568392", lomba: "Mobile Legend", active: true },
+  { id: 2, name: "Kevin Sanjaya", email: "kevin@mail.com", phone: "089749339294", lomba: "Mobile Legend", active: false },
+  { id: 3, name: "Praven Jordan", email: "praven@mail.com", phone: "081523828928", lomba: "Mobile Legend", active: true },
 ];
 
-export default function CustomerManagement() {
-  const [customers, setCustomers] = useState(initialCustomers);
+export default function EventManagement() {
+  const [events, setEvents] = useState(initialEvents);
   const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", active: true });
+  const [formData, setFormData] = useState({ name: "", email: "", phone: "", lomba: "", active: true });
+  const [editingId, setEditingId] = useState(null); // NEW
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -21,45 +21,48 @@ export default function CustomerManagement() {
   };
 
   const handleAddOrUpdate = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.lomba) {
       alert("Semua field wajib diisi!");
       return;
     }
 
     if (editingId !== null) {
-      // Update
-      setCustomers((prev) =>
-        prev.map((cust) =>
-          cust.id === editingId ? { ...cust, ...formData } : cust
+      setEvents((prev) =>
+        prev.map((ev) =>
+          ev.id === editingId ? { ...ev, ...formData } : ev
         )
       );
       setEditingId(null);
     } else {
-      // Tambah
-      const newCustomer = {
-        id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+      const newEvent = {
+        id: events.length ? Math.max(...events.map(e => e.id)) + 1 : 1,
         ...formData,
       };
-      setCustomers([...customers, newCustomer]);
+      setEvents([...events, newEvent]);
     }
 
-    // Reset form
-    setFormData({ name: "", email: "", phone: "", active: true });
+    setFormData({ name: "", email: "", phone: "", lomba: "", active: true });
     setShowForm(false);
   };
 
-  const handleEdit = (cust) => {
-    setFormData({ name: cust.name, email: cust.email, phone: cust.phone, active: cust.active });
-    setEditingId(cust.id);
+  const handleEdit = (event) => {
+    setFormData({
+      name: event.name,
+      email: event.email,
+      phone: event.phone,
+      lomba: event.lomba,
+      active: event.active,
+    });
+    setEditingId(event.id);
     setShowForm(true);
   };
 
   const handleDelete = (id) => {
-    if (window.confirm("Yakin ingin menghapus pelanggan ini?")) {
-      setCustomers(customers.filter((c) => c.id !== id));
+    if (window.confirm("Yakin ingin menghapus data ini?")) {
+      setEvents(events.filter((e) => e.id !== id));
       if (editingId === id) {
         setEditingId(null);
-        setFormData({ name: "", email: "", phone: "", active: true });
+        setFormData({ name: "", email: "", phone: "", lomba: "", active: true });
         setShowForm(false);
       }
     }
@@ -67,20 +70,19 @@ export default function CustomerManagement() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Manajemen Pelanggan</h1>
+      <h1 className="text-2xl font-semibold mb-4">Manajemen Peserta Lomba</h1>
 
       <button
         onClick={() => {
           if (editingId) {
-            // Reset if cancel during edit
             setEditingId(null);
-            setFormData({ name: "", email: "", phone: "", active: true });
+            setFormData({ name: "", email: "", phone: "", lomba: "", active: true });
           }
           setShowForm((prev) => !prev);
         }}
         className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
       >
-        {showForm ? "Batal" : "Tambah Pelanggan"}
+        {showForm ? "Batal" : "Tambah Peserta"}
       </button>
 
       {showForm && (
@@ -93,7 +95,7 @@ export default function CustomerManagement() {
               value={formData.name}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Nama pelanggan"
+              placeholder="Nama peserta"
             />
           </div>
           <div className="mb-2">
@@ -104,7 +106,7 @@ export default function CustomerManagement() {
               value={formData.email}
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Email pelanggan"
+              placeholder="Email peserta"
             />
           </div>
           <div className="mb-2">
@@ -116,6 +118,17 @@ export default function CustomerManagement() {
               onChange={handleInputChange}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Nomor telepon"
+            />
+          </div>
+          <div className="mb-2">
+            <label className="block font-medium mb-1">Lomba</label>
+            <input
+              type="text"
+              name="lomba"
+              value={formData.lomba}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Nama Perlombaan"
             />
           </div>
           <div className="flex items-center mb-4">
@@ -133,7 +146,7 @@ export default function CustomerManagement() {
             onClick={handleAddOrUpdate}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
           >
-            {editingId ? "Update Pelanggan" : "Simpan"}
+            {editingId ? "Update Peserta" : "Simpan"}
           </button>
         </div>
       )}
@@ -145,28 +158,30 @@ export default function CustomerManagement() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lomba</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {customers.map((cust) => (
+            {events.map((cust) => (
               <tr key={cust.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{cust.name}</td>
-                <td className="px-6 py-4">{cust.email}</td>
-                <td className="px-6 py-4">{cust.phone}</td>
-                <td className="px-6 py-4 text-center">
+                <td className="px-6 py-4 whitespace-nowrap">{cust.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{cust.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{cust.phone}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{cust.lomba}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
                   {cust.active ? (
                     <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Aktif
+                      On Going
                     </span>
                   ) : (
                     <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Tidak Aktif
+                      Done
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4 text-center space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
                   <button
                     className="text-blue-600 hover:text-blue-900 font-semibold"
                     onClick={() => handleEdit(cust)}
@@ -182,10 +197,10 @@ export default function CustomerManagement() {
                 </td>
               </tr>
             ))}
-            {customers.length === 0 && (
+            {events.length === 0 && (
               <tr>
-                <td colSpan={5} className="text-center py-4 text-gray-500">
-                  Tidak ada data pelanggan
+                <td colSpan={6} className="text-center py-4 text-gray-500">
+                  Tidak ada data peserta
                 </td>
               </tr>
             )}

@@ -29,6 +29,8 @@ function formatCurrency(num) {
 export default function ProductManagement() {
   const [products, setProducts] = useState(initialProducts);
   const [showForm, setShowForm] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -36,6 +38,13 @@ export default function ProductManagement() {
     price: "",
     active: true,
   });
+
+  const resetForm = () => {
+    setFormData({ name: "", category: "", stock: "", price: "", active: true });
+    setEditMode(false);
+    setEditId(null);
+    setShowForm(false);
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -45,20 +54,46 @@ export default function ProductManagement() {
     }));
   };
 
-  const handleAddProduct = () => {
+  const handleSaveProduct = () => {
     if (!formData.name || !formData.category || !formData.stock || !formData.price) {
       alert("Semua kolom harus diisi");
       return;
     }
-    const newProduct = {
+
+    const updatedProduct = {
       ...formData,
-      id: products.length + 1,
       stock: parseInt(formData.stock),
       price: parseFloat(formData.price),
     };
-    setProducts([...products, newProduct]);
-    setFormData({ name: "", category: "", stock: "", price: "", active: true });
-    setShowForm(false);
+
+    if (editMode) {
+      // Edit produk
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editId ? { ...updatedProduct, id: editId } : p))
+      );
+    } else {
+      // Tambah produk baru
+      const newProduct = {
+        ...updatedProduct,
+        id: products.length > 0 ? Math.max(...products.map((p) => p.id)) + 1 : 1,
+      };
+      setProducts([...products, newProduct]);
+    }
+
+    resetForm();
+  };
+
+  const handleEdit = (product) => {
+    setFormData({
+      name: product.name,
+      category: product.category,
+      stock: product.stock.toString(),
+      price: product.price.toString(),
+      active: product.active,
+    });
+    setEditId(product.id);
+    setEditMode(true);
+    setShowForm(true);
   };
 
   const handleDelete = (id) => {
@@ -72,10 +107,13 @@ export default function ProductManagement() {
       <h1 className="text-2xl font-semibold mb-4">Manajemen Produk</h1>
 
       <button
-        onClick={() => setShowForm((prev) => !prev)}
+        onClick={() => {
+          if (editMode) resetForm();
+          else setShowForm((prev) => !prev);
+        }}
         className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
       >
-        {showForm ? "Batal Tambah Produk" : "Tambah Produk"}
+        {showForm ? (editMode ? "Batal Edit" : "Batal Tambah Produk") : "Tambah Produk"}
       </button>
 
       {showForm && (
@@ -138,10 +176,10 @@ export default function ProductManagement() {
           </div>
 
           <button
-            onClick={handleAddProduct}
+            onClick={handleSaveProduct}
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
-            Simpan Produk
+            {editMode ? "Simpan Perubahan" : "Simpan Produk"}
           </button>
         </div>
       )}
@@ -168,18 +206,18 @@ export default function ProductManagement() {
                 <td className="px-6 py-4 text-center">
                   {product.active ? (
                     <span className="inline-block px-2 py-1 text-xs text-green-800 bg-green-100 rounded">
-                      Aktif
+                      Tersedia
                     </span>
                   ) : (
                     <span className="inline-block px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded">
-                      Nonaktif
+                      Habis
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-center space-x-2">
                   <button
                     className="text-indigo-600 hover:text-indigo-900"
-                    onClick={() => alert("Fitur Edit belum tersedia")}
+                    onClick={() => handleEdit(product)}
                   >
                     Edit
                   </button>
@@ -205,5 +243,3 @@ export default function ProductManagement() {
     </div>
   );
 }
-
-

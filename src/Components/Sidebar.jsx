@@ -9,6 +9,7 @@ import {
   LogIn,
   UserPlus,
   User2,
+  Bell,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -16,6 +17,7 @@ const menuItems = [
   { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
   { name: 'Produk', icon: <Box />, path: '/produk' },
   { name: 'Pelanggan', icon: <User2 />, path: '/pelanggan' },
+  { name: 'Event', icon: <Bell />, path: '/event'},
   { name: 'Laporan', icon: <BarChart2 />, path: '/laporan' },
 ]
 
