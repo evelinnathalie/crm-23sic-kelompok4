@@ -24,7 +24,6 @@ const menuItems = [
   { name: 'Event', icon: <Bell />, path: '/event'},
 
   { name: 'Penjualan', icon: <ShoppingCart />, path: '/penjualan' },
-  { name: 'Laporan', icon: <BarChart2 />, path: '/laporan' },
   { name: 'Reservasi', icon: <Bell/>, path: '/reservasi' },
 
 ]
