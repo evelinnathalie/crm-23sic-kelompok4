@@ -67,7 +67,7 @@ export default function CustomerManagement() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Manajemen Pelanggan</h1>
+      <h1 className="text-2xl font-semibold mb-4">Kelola Pelanggan</h1>
 
       <button
         onClick={() => {
