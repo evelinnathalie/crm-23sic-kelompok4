@@ -12,6 +12,9 @@ import {
   Bell,
   Camera,
 
+  BoxIcon,
+
+
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -25,6 +28,8 @@ const menuItems = [
 
   { name: 'Penjualan', icon: <ShoppingCart />, path: '/penjualan' },
   { name: 'Reservasi', icon: <Bell/>, path: '/reservasi' },
+
+  { name: 'Stock', icon: <BoxIcon />, path: '/stock'},
 
 ]
 
@@ -59,6 +64,7 @@ const Sidebar = () => {
         ))}
       </nav>
 
+
       <div className="mt-8 text-xs font-semibold text-gray-200">AKUN</div>
 
       <nav className="mt-2 space-y-1">
@@ -77,6 +83,7 @@ const Sidebar = () => {
           </Link>
         ))}
       </nav>
+
     </aside>
   )
 }

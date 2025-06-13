@@ -17,7 +17,7 @@ const Header = () => {
         </div>
         <div className="flex items-center gap-2 cursor-pointer text-sm text-[#444444] hover:text-[#A3B18A]">
           <User className="w-4 h-4" />
-          Sign In
+          Log Out
         </div>
       </div>
     </header>

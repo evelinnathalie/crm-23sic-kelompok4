@@ -11,6 +11,7 @@ import EventManagement from "./Pages/Event";
 import ProductManagement from "./Pages/ProdukManagement";
 import SalesManagement from "./Pages/SalesManagement";
 import Reservasi from "./Pages/Reservasi";
+import Stock from "./Pages/Stock";
 
 
 function App() {
@@ -27,6 +28,9 @@ function App() {
       <Route path="/produk" element={<ProductManagement />} />
       <Route path="/penjualan" element={<SalesManagement />} />
       <Route path="/reservasi" element={<Reservasi />} />
+
+      <Route path="/stock" element={<Stock />} /> 
+
 
       </Route>
     </Routes>
