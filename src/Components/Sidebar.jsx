@@ -11,6 +11,7 @@ import {
   CarTaxiFront,
   Bell,
   Camera,
+  Percent,
 
   BoxIcon,
 
@@ -23,11 +24,14 @@ const menuItems = [
   { name: 'Kelola Pesanan', icon: <ShoppingCart />, path: '/pesanan' },
   { name: 'Kelola Menu', icon: <Box />, path: '/menu' },
   { name: 'Pelanggan', icon: <User2 />, path: '/pelanggan' },
-
   { name: 'Event', icon: <Bell />, path: '/event'},
-
   { name: 'Penjualan', icon: <ShoppingCart />, path: '/penjualan' },
+
+  { name: 'Promosi', icon: <Percent/>, path: '/promosi' },
+  { name: 'Membership', icon: <UserPlus/>, path: '/member' },
+
   { name: 'Reservasi', icon: <Bell/>, path: '/reservasi' },
+
 
   { name: 'Stock', icon: <BoxIcon />, path: '/stock'},
 

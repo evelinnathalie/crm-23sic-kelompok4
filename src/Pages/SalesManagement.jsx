@@ -34,7 +34,7 @@ function formatCurrency(num) {
 
 export default function SalesManagement() {
   const [sales, setSales] = useState(initialSales);
-  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     invoice: "",
     customerId: "",
@@ -42,6 +42,17 @@ export default function SalesManagement() {
     total: "",
     status: "Belum Lunas",
   });
+
+  const resetForm = () => {
+    setFormData({
+      invoice: "",
+      customerId: "",
+      date: "",
+      total: "",
+      status: "Belum Lunas",
+    });
+    setEditingId(null);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,38 +62,47 @@ export default function SalesManagement() {
     }));
   };
 
-  const handleAddSale = () => {
-    if (
-      !formData.invoice ||
-      !formData.customerId ||
-      !formData.date ||
-      !formData.total
-    ) {
+  const handleSubmit = () => {
+    if (!formData.invoice || !formData.customerId || !formData.date || !formData.total) {
       alert("Semua field wajib diisi!");
       return;
     }
-    const newSale = {
-      id: sales.length + 1,
-      invoice: formData.invoice,
-      customerId: Number(formData.customerId),
-      date: formData.date,
-      total: Number(formData.total),
-      status: formData.status,
-    };
-    setSales([...sales, newSale]);
+
+    if (editingId !== null) {
+      // update
+      setSales((prev) =>
+        prev.map((sale) =>
+          sale.id === editingId ? { ...sale, ...formData, customerId: Number(formData.customerId), total: Number(formData.total) } : sale
+        )
+      );
+    } else {
+      // tambah
+      const newSale = {
+        id: sales.length ? Math.max(...sales.map((s) => s.id)) + 1 : 1,
+        ...formData,
+        customerId: Number(formData.customerId),
+        total: Number(formData.total),
+      };
+      setSales([...sales, newSale]);
+    }
+    resetForm();
+  };
+
+  const handleEdit = (sale) => {
     setFormData({
-      invoice: "",
-      customerId: "",
-      date: "",
-      total: "",
-      status: "Belum Lunas",
+      invoice: sale.invoice,
+      customerId: String(sale.customerId),
+      date: sale.date,
+      total: String(sale.total),
+      status: sale.status,
     });
-    setShowForm(false);
+    setEditingId(sale.id);
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Yakin ingin menghapus penjualan ini?")) {
       setSales(sales.filter((s) => s.id !== id));
+      if (editingId === id) resetForm();
     }
   };
 
@@ -93,18 +113,11 @@ export default function SalesManagement() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Management Penjualan</h1>
+      <h1 className="text-2xl font-semibold mb-4">Manajemen Penjualan</h1>
 
-      <button
-        onClick={() => setShowForm((prev) => !prev)}
-        className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-      >
-        {showForm ? "Batal Tambah Penjualan" : "Tambah Penjualan"}
-      </button>
-
-      {showForm && (
-        <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white">
-          <div className="mb-2">
+      <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
             <label className="block font-medium mb-1">Nomor Invoice</label>
             <input
               type="text"
@@ -115,8 +128,7 @@ export default function SalesManagement() {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
-
-          <div className="mb-2">
+          <div>
             <label className="block font-medium mb-1">Pelanggan</label>
             <select
               name="customerId"
@@ -132,8 +144,7 @@ export default function SalesManagement() {
               ))}
             </select>
           </div>
-
-          <div className="mb-2">
+          <div>
             <label className="block font-medium mb-1">Tanggal</label>
             <input
               type="date"
@@ -143,8 +154,7 @@ export default function SalesManagement() {
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
             />
           </div>
-
-          <div className="mb-2">
+          <div>
             <label className="block font-medium mb-1">Total (Rp)</label>
             <input
               type="number"
@@ -156,8 +166,7 @@ export default function SalesManagement() {
               min="0"
             />
           </div>
-
-          <div className="mb-4">
+          <div>
             <label className="block font-medium mb-1">Status</label>
             <select
               name="status"
@@ -170,87 +179,53 @@ export default function SalesManagement() {
               <option value="Batal">Batal</option>
             </select>
           </div>
-
-          <button
-            onClick={handleAddSale}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-            Simpan
-          </button>
         </div>
-      )}
+
+        <button
+          onClick={handleSubmit}
+          className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+        >
+          {editingId ? "Update Penjualan" : "Tambah Penjualan"}
+        </button>
+      </div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Invoice
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Pelanggan
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tanggal
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Total
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Aksi
-              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Invoice</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Pelanggan</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Tanggal</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">Total</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Status</th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {sales.map((sale) => (
               <tr key={sale.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">{sale.invoice}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {getCustomerName(sale.customerId)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{sale.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  {formatCurrency(sale.total)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
+                <td className="px-4 py-3">{sale.invoice}</td>
+                <td className="px-4 py-3">{getCustomerName(sale.customerId)}</td>
+                <td className="px-4 py-3">{sale.date}</td>
+                <td className="px-4 py-3 text-right">{formatCurrency(sale.total)}</td>
+                <td className="px-4 py-3 text-center">
                   {sale.status === "Lunas" ? (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Lunas
-                    </span>
+                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-600">Lunas</span>
                   ) : sale.status === "Belum Lunas" ? (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      Belum Lunas
-                    </span>
+                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-600">Belum Lunas</span>
                   ) : (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Batal
-                    </span>
+                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-600">Batal</span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
-                  <button
-                    className="text-indigo-600 hover:text-indigo-900 font-semibold"
-                    onClick={() => alert("Fitur Edit belum tersedia")}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-900 font-semibold"
-                    onClick={() => handleDelete(sale.id)}
-                  >
-                    Hapus
-                  </button>
+                <td className="px-4 py-3 text-center space-x-2">
+                  <button onClick={() => handleEdit(sale)} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
+                  <button onClick={() => handleDelete(sale.id)} className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Hapus</button>
                 </td>
               </tr>
             ))}
             {sales.length === 0 && (
               <tr>
-                <td colSpan={6} className="text-center py-4 text-gray-500">
-                  Tidak ada data penjualan
-                </td>
+                <td colSpan={6} className="text-center py-4 text-gray-500">Tidak ada data penjualan</td>
               </tr>
             )}
           </tbody>
@@ -259,5 +234,3 @@ export default function SalesManagement() {
     </div>
   );
 }
-
-

@@ -8,10 +8,16 @@ import CustomerManagement from "./Pages/CustomerManagement";
 
 import EventManagement from "./Pages/Event";
 
+import SalesManagement from "./Pages/SalesManagement";
+import PromoManagement from "./Pages/Promosi";
+import MemberManagement from "./Pages/Membership";
+
+
 import ProductManagement from "./Pages/ProdukManagement";
 import SalesManagement from "./Pages/SalesManagement";
 import Reservasi from "./Pages/Reservasi";
 import Stock from "./Pages/Stock";
+
 
 
 function App() {
@@ -24,12 +30,15 @@ function App() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/pelanggan" element={<CustomerManagement />} />
       <Route path="/event" element={<EventManagement />} />
-
-      <Route path="/produk" element={<ProductManagement />} />
       <Route path="/penjualan" element={<SalesManagement />} />
+
+      <Route path="/promosi" element={<PromoManagement />} />
+      <Route path="/member" element={<MemberManagement />} />
+
       <Route path="/reservasi" element={<Reservasi />} />
 
       <Route path="/stock" element={<Stock />} /> 
+
 
 
       </Route>
