@@ -4,10 +4,9 @@ import Dashboard from "./Pages/Dashboard";
 import CustomerManagement from "./Pages/CustomerManagement";
 
 import EventManagement from "./Pages/Event";
-
-import ProductManagement from "./Pages/Produk";
 import SalesManagement from "./Pages/SalesManagement";
-import Reservasi from "./Pages/Reservasi";
+import PromoManagement from "./Pages/Promosi";
+import MemberManagement from "./Pages/Membership";
 
 
 function App() {
@@ -17,11 +16,9 @@ function App() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/pelanggan" element={<CustomerManagement />} />
       <Route path="/event" element={<EventManagement />} />
-
-      <Route path="/produk" element={<ProductManagement />} />
       <Route path="/penjualan" element={<SalesManagement />} />
-      <Route path="/reservasi" element={<Reservasi />} />
-
+      <Route path="/promosi" element={<PromoManagement />} />
+      <Route path="/member" element={<MemberManagement />} />
       </Route>
     </Routes>
   )

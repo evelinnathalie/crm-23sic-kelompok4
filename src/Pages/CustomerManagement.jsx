@@ -1,16 +1,41 @@
 import React, { useState } from "react";
 
 const initialCustomers = [
-  { id: 1, name: "Budi Santoso", email: "budi@mail.com", phone: "081234567890", active: true },
-  { id: 2, name: "Siti Aminah", email: "siti@mail.com", phone: "089876543210", active: false },
-  { id: 3, name: "Andi Wijaya", email: "andi@mail.com", phone: "081299988877", active: true },
+  {
+    id: 1,
+    name: "Budi Santoso",
+    email: "budi@mail.com",
+    phone: "081234567890",
+    active: true,
+  },
+  {
+    id: 2,
+    name: "Siti Aminah",
+    email: "siti@mail.com",
+    phone: "089876543210",
+    active: false,
+  },
 ];
 
 export default function CustomerManagement() {
   const [customers, setCustomers] = useState(initialCustomers);
-  const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", active: true });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    active: true,
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      phone: "",
+      active: true,
+    });
+    setEditingId(null);
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -20,161 +45,148 @@ export default function CustomerManagement() {
     }));
   };
 
-  const handleAddOrUpdate = () => {
+  const handleSubmit = () => {
     if (!formData.name || !formData.email || !formData.phone) {
       alert("Semua field wajib diisi!");
       return;
     }
 
     if (editingId !== null) {
-      // Update
       setCustomers((prev) =>
         prev.map((cust) =>
           cust.id === editingId ? { ...cust, ...formData } : cust
         )
       );
-      setEditingId(null);
     } else {
-      // Tambah
       const newCustomer = {
-        id: customers.length ? Math.max(...customers.map(c => c.id)) + 1 : 1,
+        id: customers.length ? Math.max(...customers.map((c) => c.id)) + 1 : 1,
         ...formData,
       };
       setCustomers([...customers, newCustomer]);
     }
-
-    // Reset form
-    setFormData({ name: "", email: "", phone: "", active: true });
-    setShowForm(false);
+    resetForm();
   };
 
   const handleEdit = (cust) => {
-    setFormData({ name: cust.name, email: cust.email, phone: cust.phone, active: cust.active });
+    setFormData({
+      name: cust.name,
+      email: cust.email,
+      phone: cust.phone,
+      active: cust.active,
+    });
     setEditingId(cust.id);
-    setShowForm(true);
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Yakin ingin menghapus pelanggan ini?")) {
       setCustomers(customers.filter((c) => c.id !== id));
-      if (editingId === id) {
-        setEditingId(null);
-        setFormData({ name: "", email: "", phone: "", active: true });
-        setShowForm(false);
-      }
+      if (editingId === id) resetForm();
     }
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Kelola Pelanggan</h1>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Form Pelanggan</h1>
 
-      <button
-        onClick={() => {
-          if (editingId) {
-            // Reset if cancel during edit
-            setEditingId(null);
-            setFormData({ name: "", email: "", phone: "", active: true });
-          }
-          setShowForm((prev) => !prev);
-        }}
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-      >
-        {showForm ? "Batal" : "Tambah Pelanggan"}
-      </button>
+      <div className="mb-6 bg-white border p-4 rounded shadow">
+  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+    
+    <div>
+      <label htmlFor="name" className="block mb-1 font-medium">Nama</label>
+      <input
+        id="name"
+        type="text"
+        name="name"
+        value={formData.name}
+        onChange={handleInputChange}
+        placeholder="Nama"
+        className="border rounded px-3 py-2 w-full"
+      />
+    </div>
 
-      {showForm && (
-        <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white">
-          <div className="mb-2">
-            <label className="block font-medium mb-1">Nama</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Nama pelanggan"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-medium mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Email pelanggan"
-            />
-          </div>
-          <div className="mb-2">
-            <label className="block font-medium mb-1">Telepon</label>
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Nomor telepon"
-            />
-          </div>
-          <div className="flex items-center mb-4">
-            <input
-              type="checkbox"
-              name="active"
-              checked={formData.active}
-              onChange={handleInputChange}
-              id="activeCheckbox"
-              className="mr-2"
-            />
-            <label htmlFor="activeCheckbox" className="font-medium">Aktif</label>
-          </div>
-          <button
-            onClick={handleAddOrUpdate}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
-          >
-            {editingId ? "Update Pelanggan" : "Simpan"}
-          </button>
-        </div>
-      )}
+    <div>
+      <label htmlFor="email" className="block mb-1 font-medium">Email</label>
+      <input
+        id="email"
+        type="email"
+        name="email"
+        value={formData.email}
+        onChange={handleInputChange}
+        placeholder="Email"
+        className="border rounded px-3 py-2 w-full"
+      />
+    </div>
+
+    <div>
+      <label htmlFor="phone" className="block mb-1 font-medium">Telepon</label>
+      <input
+        id="phone"
+        type="text"
+        name="phone"
+        value={formData.phone}
+        onChange={handleInputChange}
+        placeholder="Telepon"
+        className="border rounded px-3 py-2 w-full"
+      />
+    </div>
+
+    <div className="pt-1">
+      <label htmlFor="activeCheckbox" className="block mb-1 font-medium">Status</label>
+      <div className="flex items-center h-full">
+        <input
+          type="checkbox"
+          name="active"
+          checked={formData.active}
+          onChange={handleInputChange}
+          id="activeCheckbox"
+          className="mr-2"
+        />
+        <label htmlFor="activeCheckbox" className="font-medium">Aktif</label>
+      </div>
+    </div>
+  </div>
+
+  <button
+    onClick={handleSubmit}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+  >
+    {editingId ? "Update Pelanggan" : "Simpan"}
+  </button>
+</div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telepon</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              <th className="px-4 py-3 text-left">Nama</th>
+              <th className="px-4 py-3 text-left">Email</th>
+              <th className="px-4 py-3 text-left">Telepon</th>
+              <th className="px-4 py-3 text-center">Status</th>
+              <th className="px-4 py-3 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody>
             {customers.map((cust) => (
-              <tr key={cust.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{cust.name}</td>
-                <td className="px-6 py-4">{cust.email}</td>
-                <td className="px-6 py-4">{cust.phone}</td>
-                <td className="px-6 py-4 text-center">
-                  {cust.active ? (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      Aktif
-                    </span>
-                  ) : (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                      Tidak Aktif
-                    </span>
-                  )}
+              <tr key={cust.id} className="border-t hover:bg-gray-50">
+                <td className="px-4 py-2">{cust.name}</td>
+                <td className="px-4 py-2">{cust.email}</td>
+                <td className="px-4 py-2">{cust.phone}</td>
+                <td className="px-4 py-2 text-center">
+                  <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
+                    cust.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  }`}>
+                    {cust.active ? "Aktif" : "Tidak Aktif"}
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-center space-x-2">
+                <td className="px-4 py-2 text-center space-x-2">
                   <button
-                    className="text-blue-600 hover:text-blue-900 font-semibold"
+                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                     onClick={() => handleEdit(cust)}
                   >
                     Edit
                   </button>
                   <button
-                    className="text-red-600 hover:text-red-900 font-semibold"
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                     onClick={() => handleDelete(cust.id)}
                   >
                     Hapus
