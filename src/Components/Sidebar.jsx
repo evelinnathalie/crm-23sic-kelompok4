@@ -20,7 +20,7 @@ import {
 import { Link, useLocation } from 'react-router-dom'
 
 const menuItems = [
-  { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
+  { name: 'Dashboard', icon: <LayoutDashboard />, path: '/dashboard' },
   { name: 'Kelola Pesanan', icon: <ShoppingCart />, path: '/pesanan' },
   { name: 'Kelola Menu', icon: <Box />, path: '/menu' },
   { name: 'Pelanggan', icon: <User2 />, path: '/pelanggan' },
