@@ -5,20 +5,12 @@ import Dashboard from "./Pages/Dashboard";
 import Pesanan from "./Pages/Pesanan";
 import Menu from "./Pages/Menu";
 import CustomerManagement from "./Pages/CustomerManagement";
-
 import EventManagement from "./Pages/Event";
-
 import SalesManagement from "./Pages/SalesManagement";
 import PromoManagement from "./Pages/Promosi";
 import MemberManagement from "./Pages/Membership";
-
-
-import ProductManagement from "./Pages/ProdukManagement";
-import SalesManagement from "./Pages/SalesManagement";
 import Reservasi from "./Pages/Reservasi";
 import Stock from "./Pages/Stock";
-
-
 
 function App() {
   return (
