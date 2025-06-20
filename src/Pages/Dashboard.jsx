@@ -1,118 +1,100 @@
-import React from "react";
-import { Bar, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Tooltip,
-  Legend
-} from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
+import React, { useEffect, useState } from "react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const Dashboard = () => {
-  const today = new Date().toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const [reservations, setReservations] = useState([]);
 
-  const stats = [
-    { title: "Pendapatan Hari Ini", value: "Rp1.200.000", color: "bg-[#A3B18A]" },
-    { title: "Pesanan Hari Ini", value: "58 Pesanan", color: "bg-[#9DA17B]" },
-    { title: "Menu Aktif", value: "26 Item", color: "bg-[#E4E6DC]" },
-    { title: "Reservasi", value: "12 Meja", color: "bg-[#DADADA]" },
-  ];
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("reservations")) || [];
+    setReservations(stored);
+  }, []);
 
-  const barData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"],
-    datasets: [
-      {
-        label: "Pendapatan (juta)",
-        data: [12, 19, 10, 25, 15, 30],
-        backgroundColor: "#A3B18A",
-        borderRadius: 6, // bulatkan batang chart
-        maxBarThickness: 40,
-      },
-    ],
-  };
+  const today = new Date().toISOString().split("T")[0];
+  const todayReservations = reservations.filter(r => r.tanggal === today);
 
-  const pieData = {
-    labels: ["Minuman", "Makanan Berat", "Pastry", "Snack"],
-    datasets: [
-      {
-        data: [30, 40, 15, 15],
-        backgroundColor: ["#A3B18A", "#E4E6DC", "#9DA17B", "#DADADA"],
-        borderWidth: 1,
-        borderColor: "#FAFAF8",
-      },
-    ],
-  };
+  const totalToday = todayReservations.length;
+  const totalAll = reservations.length;
+
+  const acaraCount = reservations.reduce((acc, curr) => {
+    acc[curr.acara] = (acc[curr.acara] || 0) + 1;
+    return acc;
+  }, {});
+
+  const pieData = Object.entries(acaraCount).map(([name, value]) => ({ name, value }));
+  const COLORS = ["#10B981", "#22C55E", "#3B82F6", "#8B4513", "#F59E0B"];
 
   return (
-    <div className="p-8 bg-[#FAFAF8] min-h-screen text-[#444444] font-sans">
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-4xl font-extrabold mb-1 tracking-wide">Selamat Datang, Admin</h1>
-        <p className="text-gray-600 text-lg">{today}</p>
-      </header>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard Admin</h1>
 
-      {/* Statistik */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {stats.map(({ title, value, color }) => (
-          <div
-            key={title}
-            className={`${color} p-6 rounded-2xl shadow-lg text-[#222] flex flex-col justify-center`}
-            style={{ minHeight: 120 }}
-          >
-            <p className="text-md font-medium opacity-90">{title}</p>
-            <h2 className="text-3xl font-bold mt-3">{value}</h2>
-          </div>
-        ))}
-      </section>
-
-      {/* Grafik */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="bg-white rounded-3xl shadow-xl p-8 flex flex-col">
-          <h3 className="font-semibold text-2xl mb-6 border-b border-gray-200 pb-2">
-            Pendapatan Bulanan
-          </h3>
-          <Bar data={barData} options={{ 
-            responsive: true, 
-            plugins: { 
-              legend: { position: "top", labels: { font: { size: 14 } } },
-              tooltip: { enabled: true }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { font: { size: 14 } },
-                grid: { color: "#eee" }
-              },
-              x: {
-                ticks: { font: { size: 14 } },
-                grid: { display: false }
-              }
-            }
-          }} />
+      <div className="grid md:grid-cols-2 gap-6 mb-10">
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">📅 Reservasi Hari Ini</h2>
+          <p className="text-4xl font-bold text-emerald-600">{totalToday}</p>
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl p-8 flex flex-col">
-          <h3 className="font-semibold text-2xl mb-6 border-b border-gray-200 pb-2">
-            Kategori Menu Populer
-          </h3>
-          <Pie data={pieData} options={{ 
-            responsive: true, 
-            plugins: { 
-              legend: { position: "right", labels: { font: { size: 14 } } },
-              tooltip: { enabled: true }
-            },
-          }} />
+        <div className="bg-white p-6 rounded-xl shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-700 mb-2">📊 Total Reservasi</h2>
+          <p className="text-4xl font-bold text-blue-600">{totalAll}</p>
         </div>
-      </section>
+      </div>
+
+      <div className="bg-white p-6 rounded-xl shadow-lg mb-10">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">🍽️ Distribusi Jenis Acara</h2>
+        {pieData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                label
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-gray-500 text-sm">Belum ada data reservasi untuk ditampilkan.</p>
+        )}
+      </div>
+
+      <div className="bg-white p-6 rounded-xl shadow-lg">
+        <h2 className="text-xl font-semibold text-gray-700 mb-4">📋 Daftar Reservasi</h2>
+        <div className="overflow-auto max-h-[400px]">
+          <table className="min-w-full text-sm text-left">
+            <thead className="bg-gray-100 text-gray-600">
+              <tr>
+                <th className="p-2">Nama</th>
+                <th className="p-2">Nomor WA</th>
+                <th className="p-2">Tanggal</th>
+                <th className="p-2">Waktu</th>
+                <th className="p-2">Jumlah Orang</th>
+                <th className="p-2">Acara</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reservations.map((r, i) => (
+                <tr key={i} className="border-b hover:bg-gray-50">
+                  <td className="p-2">{r.nama}</td>
+                  <td className="p-2">{r.nomor}</td>
+                  <td className="p-2">{r.tanggal}</td>
+                  <td className="p-2">{r.waktu}</td>
+                  <td className="p-2">{r.jumlah}</td>
+                  <td className="p-2">{r.acara}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

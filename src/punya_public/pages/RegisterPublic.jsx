@@ -1,32 +1,37 @@
-// LoginPublic.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
-export default function LoginPublic() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const [form, setForm] = useState({ nama: "", password: "", role: "member" });
+export default function RegisterPublic() {
+  const [form, setForm] = useState({ nama: "", password: "", konfirmasi: "" });
   const [error, setError] = useState("");
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const success = login(form);
-    if (success) {
-      if (form.role === "admin") {
-        navigate("/dashboard");
-      } else {
-        navigate("/");
-      }
-    } else {
-      setError("Nama atau password salah.");
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const existing = users.find((u) => u.nama === form.nama);
+
+    if (existing) {
+      setError("❌ Nama sudah terdaftar. Silakan pakai nama lain.");
+      return;
     }
+
+    if (form.password.length < 4) {
+      setError("❌ Password minimal 4 karakter.");
+      return;
+    }
+
+    if (form.password !== form.konfirmasi) {
+      setError("❌ Konfirmasi password tidak cocok.");
+      return;
+    }
+
+    users.push({ nama: form.nama, password: form.password });
+    localStorage.setItem("users", JSON.stringify(users));
+    navigate("/login");
   };
 
   return (
@@ -38,7 +43,7 @@ export default function LoginPublic() {
           className="bg-white p-8 rounded-xl shadow max-w-md w-full space-y-4"
         >
           <h1 className="text-2xl font-bold text-center text-[#5A6B3E]">
-            Login Akun
+            Daftar Akun Baru
           </h1>
           {error && (
             <p className="bg-red-100 text-red-700 px-4 py-2 rounded text-sm">
@@ -49,7 +54,7 @@ export default function LoginPublic() {
             name="nama"
             placeholder="Nama"
             value={form.nama}
-            onChange={handleChange}
+            onChange={(e) => setForm({ ...form, nama: e.target.value })}
             className="w-full border px-4 py-2 rounded"
             required
           />
@@ -58,21 +63,21 @@ export default function LoginPublic() {
             type="password"
             placeholder="Password"
             value={form.password}
-            onChange={handleChange}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="w-full border px-4 py-2 rounded"
             required
           />
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
+          <input
+            name="konfirmasi"
+            type="password"
+            placeholder="Konfirmasi Password"
+            value={form.konfirmasi}
+            onChange={(e) => setForm({ ...form, konfirmasi: e.target.value })}
             className="w-full border px-4 py-2 rounded"
-          >
-            <option value="member">Member</option>
-            <option value="admin">Admin</option>
-          </select>
+            required
+          />
           <button className="w-full py-2 bg-[#5A6B3E] text-white rounded hover:bg-[#4c5a35]">
-            Login
+            Daftar Sekarang
           </button>
         </form>
       </main>

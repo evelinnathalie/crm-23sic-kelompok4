@@ -1,21 +1,40 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-// 1. Buat context
 const AuthContext = createContext();
-
-// 2. Hook untuk akses
 export const useAuth = () => useContext(AuthContext);
 
-// 3. Provider (membungkus <App />)
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // user = { nama, nomor, role }
+  const [user, setUser] = useState(null);
 
-  const login = (userData) => {
-    setUser(userData);
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem("auth_user"));
+    if (savedUser) setUser(savedUser);
+  }, []);
+
+  const login = ({ nama, password }) => {
+    if (nama === "admin" && password === "123") {
+      const userData = { nama: "admin", role: "admin" };
+      setUser(userData);
+      localStorage.setItem("auth_user", JSON.stringify(userData));
+      return true;
+    }
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const match = users.find((u) => u.nama === nama && u.password === password);
+
+    if (match) {
+      const userData = { nama: match.nama, role: "member" };
+      setUser(userData);
+      localStorage.setItem("auth_user", JSON.stringify(userData));
+      return true;
+    }
+
+    return false;
   };
 
   const logout = () => {
     setUser(null);
+    localStorage.removeItem("auth_user"); // hanya hapus info login, tidak hapus menus
   };
 
   return (
