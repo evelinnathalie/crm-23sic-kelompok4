@@ -2,22 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { supabase } from "../../supabase";
 
 export default function RegisterPublic() {
   const [form, setForm] = useState({ nama: "", password: "", konfirmasi: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const existing = users.find((u) => u.nama === form.nama);
-
-    if (existing) {
-      setError("❌ Nama sudah terdaftar. Silakan pakai nama lain.");
-      return;
-    }
 
     if (form.password.length < 4) {
       setError("❌ Password minimal 4 karakter.");
@@ -29,9 +22,28 @@ export default function RegisterPublic() {
       return;
     }
 
-    users.push({ nama: form.nama, password: form.password });
-    localStorage.setItem("users", JSON.stringify(users));
-    navigate("/login");
+    // Cek apakah nama sudah ada di Supabase
+    const { data: existing } = await supabase
+      .from("users")
+      .select("*")
+      .eq("nama", form.nama)
+      .single();
+
+    if (existing) {
+      setError("❌ Nama sudah terdaftar.");
+      return;
+    }
+
+    // Simpan ke Supabase
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert([{ nama: form.nama, password: form.password }]);
+
+    if (insertError) {
+      setError("❌ Gagal daftar akun.");
+    } else {
+      navigate("/login");
+    }
   };
 
   return (

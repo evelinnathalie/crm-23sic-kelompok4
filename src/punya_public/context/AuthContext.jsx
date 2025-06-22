@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { supabase } from "../../supabase";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -6,35 +7,55 @@ export const useAuth = () => useContext(AuthContext);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
+  // Cek session saat pertama kali load (tanpa localStorage)
   useEffect(() => {
-    const savedUser = JSON.parse(localStorage.getItem("auth_user"));
-    if (savedUser) setUser(savedUser);
+    checkSession();
   }, []);
 
-  const login = ({ nama, password }) => {
+  const checkSession = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (data?.session?.user) {
+      const { user: supaUser } = data.session;
+      const { data: profile } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", supaUser.id)
+        .single();
+      if (profile) {
+        setUser({ id: profile.id, nama: profile.nama, role: "member" });
+      }
+    }
+  };
+
+  const login = async ({ nama, password }) => {
+    // Login Admin (hardcoded)
     if (nama === "admin" && password === "123") {
-      const userData = { nama: "admin", role: "admin" };
-      setUser(userData);
-      localStorage.setItem("auth_user", JSON.stringify(userData));
+      const adminUser = { nama: "admin", role: "admin" };
+      setUser(adminUser);
       return true;
     }
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const match = users.find((u) => u.nama === nama && u.password === password);
+    // Cek user di tabel Supabase
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("nama", nama)
+      .eq("password", password)
+      .single();
 
-    if (match) {
-      const userData = { nama: match.nama, role: "member" };
-      setUser(userData);
-      localStorage.setItem("auth_user", JSON.stringify(userData));
-      return true;
-    }
+      if (data && !error) {
+        const memberUser = { id: data.id, nama: data.nama, role: "member" }; // Tambahkan id di sini
+        setUser(memberUser);
+        return true;
+      }
+      
 
     return false;
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("auth_user"); // hanya hapus info login, tidak hapus menus
+    supabase.auth.signOut(); // optional, kalau pakai auth resmi
   };
 
   return (

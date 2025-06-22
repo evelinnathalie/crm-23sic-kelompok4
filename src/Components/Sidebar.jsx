@@ -4,15 +4,11 @@ import {
   LayoutDashboard,
   Box,
   ShoppingCart,
-  Settings,
   LogOut,
   User2,
   UserPlus,
   Bell,
   Calendar,
-  Package,
-  TrendingUp,
-  Users,
   ChevronRight,
 } from 'lucide-react';
 
@@ -26,26 +22,22 @@ const Sidebar = () => {
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/dashboard', description: 'Ringkasan bisnis' },
     { name: 'Kelola Pesanan', icon: <ShoppingCart size={18} />, path: '/pesanan', description: 'Pesanan masuk & riwayat', badge: '12' },
     { name: 'Kelola Menu', icon: <Box size={18} />, path: '/menu/monochrome', description: 'Menu & kategori' },
-    { name: 'Pelanggan', icon: <Users size={18} />, path: '/pelanggan', description: 'Data pelanggan' },
-    { name: 'Event & Promo', icon: <Calendar size={18} />, path: '/event', description: 'Event & promosi' },
-    { name: 'Laporan Penjualan', icon: <TrendingUp size={18} />, path: '/penjualan', description: 'Analisis penjualan' },
+    { name: 'Event', icon: <Calendar size={18} />, path: '/event', description: 'Event dan jadwal' },
+    { name: 'Promosi', icon: <UserPlus size={18} />, path: '/promosi', description: 'Voucher & promo aktif' },
     { name: 'Membership', icon: <UserPlus size={18} />, path: '/member', description: 'Program loyalitas' },
     { name: 'Reservasi', icon: <Bell size={18} />, path: '/reservasi', description: 'Booking meja', badge: '3' },
-    { name: 'Stok Barang', icon: <Package size={18} />, path: '/stock', description: 'Inventori & stok' },
   ];
 
-  const accountItems = [
-    { name: 'Pengaturan', icon: <Settings size={18} />, path: '/pengaturan' },
-    { name: 'Keluar', icon: <LogOut size={18} />, path: '/logout', isLogout: true },
-  ];
+  const handleLogout = () => {
+    navigate('/'); // Redirect ke halaman publik
+  };
 
   return (
-    <aside className="bg-[#646F44] w-72 h-screen shadow-2xl flex-col hidden md:flex">
+    <aside className="fixed top-0 left-0 h-screen w-72 bg-[#646F44] shadow-2xl flex flex-col z-50">
       <div className="flex flex-col justify-between h-full">
 
-        {/* HEADER + PROFILE + NAVIGATION */}
+        {/* Header Logo */}
         <div>
-          {/* Header */}
           <div className="px-6 py-6 border-b border-[#505B36]">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
@@ -58,7 +50,7 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* User Profile */}
+          {/* User Info */}
           <div className="px-6 py-4 border-b border-[#505B36]">
             <div className="flex items-center gap-3 p-3 bg-[#505B36] rounded-xl">
               <div className="w-8 h-8 bg-[#B5C47B] rounded-full flex items-center justify-center">
@@ -72,7 +64,7 @@ const Sidebar = () => {
             </div>
           </div>
 
-          {/* Menu List */}
+          {/* Menu */}
           <nav className="px-4 py-4 overflow-y-auto max-h-[calc(100vh-300px)]">
             <div className="space-y-1">
               {menuItems.map((item) => (
@@ -127,42 +119,27 @@ const Sidebar = () => {
           </nav>
         </div>
 
-        {/* Account section */}
+        {/* Logout + Footer */}
         <div>
           <div className="px-4 py-4 border-t border-[#505B36]">
             <div className="space-y-1">
-              {accountItems.map((item) => (
-                <div
-                  key={item.name}
-                  onClick={() => navigate(item.path)}
-                  className={`group relative rounded-xl transition-all duration-200 cursor-pointer ${
-                    isActive(item.path)
-                      ? 'bg-white shadow-md'
-                      : item.isLogout
-                      ? 'hover:bg-red-500/20'
-                      : 'hover:bg-[#505B36]'
-                  }`}
-                >
-                  <div className={`flex items-center gap-3 px-4 py-3 ${
-                    isActive(item.path)
-                      ? 'text-[#646F44]'
-                      : item.isLogout
-                      ? 'text-red-300 hover:text-red-200'
-                      : 'text-gray-200 hover:text-white'
-                  }`}>
-                    <div className="flex-shrink-0">{item.icon}</div>
-                    <span className="font-medium text-sm">{item.name}</span>
-                  </div>
+              <div
+                onClick={handleLogout}
+                className="group relative rounded-xl transition-all duration-200 cursor-pointer hover:bg-red-500/20"
+              >
+                <div className="flex items-center gap-3 px-4 py-3 text-red-300 hover:text-red-200">
+                  <LogOut size={18} />
+                  <span className="font-medium text-sm">Keluar</span>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
-          {/* Footer */}
           <div className="px-6 py-4 border-t border-[#505B36]">
-            <div className="text-center">
-              <p className="text-gray-300 text-xs">© 2024 Monochrome Space</p>
-              <p className="text-gray-400 text-xs mt-1">v2.1.0</p>
+            <div className="text-center text-xs text-gray-400">
+              © {new Date().getFullYear()} Monochrome Space
+              <br />
+              v2.1.0
             </div>
           </div>
         </div>

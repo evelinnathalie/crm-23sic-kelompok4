@@ -1,4 +1,3 @@
-// LoginPublic.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -8,21 +7,22 @@ import Footer from "../components/Footer";
 export default function LoginPublic() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nama: "", password: "", role: "member" });
+  const [form, setForm] = useState({ nama: "", password: "" });
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = login(form);
+    const success = await login(form);
+
     if (success) {
-      if (form.role === "admin") {
+      if (form.nama === "admin" && form.password === "123") {
         navigate("/dashboard");
       } else {
-        navigate("/");
+        navigate("/"); // atau "/homewithloyalty" sesuai logic kamu
       }
     } else {
       setError("Nama atau password salah.");
@@ -62,15 +62,6 @@ export default function LoginPublic() {
             className="w-full border px-4 py-2 rounded"
             required
           />
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-            className="w-full border px-4 py-2 rounded"
-          >
-            <option value="member">Member</option>
-            <option value="admin">Admin</option>
-          </select>
           <button className="w-full py-2 bg-[#5A6B3E] text-white rounded hover:bg-[#4c5a35]">
             Login
           </button>
