@@ -1,197 +1,137 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
-const initialOrders = [
-  { id: 1, customer: 'Evelin', type: 'On-site', items: 'Latte, Croissant', status: 'Diproses' },
-  { id: 2, customer: 'Budi', type: 'Online', items: 'Espresso', status: 'Selesai' },
-  { id: 3, customer: 'Sari', type: 'On-site', items: 'Americano', status: 'Diproses' },
-];
 
-const statuses = ['Diproses', 'Selesai', 'Dibatalkan'];
-const types = ['On-site', 'Online'];
+export default function Pesanan() {
+  const [pesanan, setPesanan] = useState([]);
+  const [totalHariIni, setTotalHariIni] = useState(0);
+  const [totalSemua, setTotalSemua] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
-const Pesanan = () => {
-  const [orders, setOrders] = useState(initialOrders);
-  const [form, setForm] = useState({ customer: '', type: types[0], items: '', status: statuses[0] });
-  const [editingId, setEditingId] = useState(null);
 
-  // Input change handler
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  // Add new order
-  const addOrder = () => {
-    if (!form.customer || !form.items) {
-      alert('Nama customer dan pesanan harus diisi!');
-      return;
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+
+    if (error) {
+      console.error("Gagal mengambil data pesanan:", error.message);
+    } else {
+      setPesanan(data);
+
+
+      const today = new Date().toISOString().slice(0, 10);
+      const totalToday = data
+        .filter((item) => item.created_at.startsWith(today))
+        .reduce((sum, item) => sum + item.total, 0);
+
+
+      const totalAll = data.reduce((sum, item) => sum + item.total, 0);
+
+
+      setTotalHariIni(totalToday);
+      setTotalSemua(totalAll);
     }
-    const newOrder = {
-      id: orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1,
-      ...form,
-    };
-    setOrders([...orders, newOrder]);
-    setForm({ customer: '', type: types[0], items: '', status: statuses[0] });
+    setIsLoading(false);
   };
 
-  // Start editing an order
-  const startEdit = (order) => {
-    setEditingId(order.id);
-    setForm({ customer: order.customer, type: order.type, items: order.items, status: order.status });
-  };
 
-  // Save edited order
-  const saveEdit = () => {
-    setOrders(
-      orders.map(o => (o.id === editingId ? { ...o, ...form } : o))
-    );
-    setEditingId(null);
-    setForm({ customer: '', type: types[0], items: '', status: statuses[0] });
-  };
+  const handleUpdateStatus = async (id, newStatus) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: newStatus })
+      .eq("id", id);
 
-  // Cancel editing
-  const cancelEdit = () => {
-    setEditingId(null);
-    setForm({ customer: '', type: types[0], items: '', status: statuses[0] });
-  };
 
-  // Delete order
-  const deleteOrder = (id) => {
-    if(window.confirm('Yakin ingin menghapus pesanan ini?')){
-      setOrders(orders.filter(o => o.id !== id));
+    if (error) {
+      alert("Gagal memperbarui status pesanan.");
+    } else {
+      fetchData(); // refresh data
     }
   };
+
 
   return (
     <div className="p-6 bg-[#FAFAF8] min-h-screen">
-      <h1 className="text-3xl font-semibold text-[#444444] mb-6">Kelola Pesanan</h1>
+      <h1 className="text-3xl font-semibold mb-6 text-[#444]">Kelola Pesanan</h1>
 
-      {/* Form Add/Edit */}
-      <div className="mb-6 bg-white p-4 rounded shadow border border-[#E4E6DC]">
-        <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Pesanan' : 'Tambah Pesanan'}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-          <div>
-            <label className="block mb-1 text-sm font-medium">Customer</label>
-            <input
-              type="text"
-              name="customer"
-              value={form.customer}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              placeholder="Nama customer"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium">Tipe</label>
-            <select
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              {types.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium">Pesanan</label>
-            <input
-              type="text"
-              name="items"
-              value={form.items}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-              placeholder="Contoh: Latte, Croissant"
-            />
-          </div>
-          <div>
-            <label className="block mb-1 text-sm font-medium">Status</label>
-            <select
-              name="status"
-              value={form.status}
-              onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              {statuses.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            {editingId ? (
-              <div className="space-x-2">
-                <button
-                  onClick={saveEdit}
-                  className="px-4 py-2 bg-[#98BF64] hover:bg-[#7a9e4f] text-white rounded"
-                >
-                  Simpan
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  className="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded"
-                >
-                  Batal
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={addOrder}
-                className="px-4 py-2 bg-[#98BF64] hover:bg-[#7a9e4f] text-white rounded"
-              >
-                Tambah
-              </button>
-            )}
-          </div>
+
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
+        <div className="bg-white rounded border p-4 shadow">
+          <h2 className="text-lg font-medium mb-1 text-gray-600">Total Hari Ini</h2>
+          <p className="text-2xl font-bold text-green-700">Rp {totalHariIni.toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded border p-4 shadow">
+          <h2 className="text-lg font-medium mb-1 text-gray-600">Total Keseluruhan</h2>
+          <p className="text-2xl font-bold text-green-700">Rp {totalSemua.toLocaleString()}</p>
         </div>
       </div>
 
-      {/* Orders Table */}
-      <table className="min-w-full bg-white rounded-lg shadow overflow-hidden border border-[#E4E6DC]">
-        <thead className="bg-[#E8ECE5] text-[#444444]">
-          <tr>
-            <th className="p-4 text-left">ID</th>
-            <th className="p-4 text-left">Customer</th>
-            <th className="p-4 text-left">Tipe</th>
-            <th className="p-4 text-left">Pesanan</th>
-            <th className="p-4 text-left">Status</th>
-            <th className="p-4 text-left">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {orders.map(({ id, customer, type, items, status }) => (
-            <tr key={id} className="border-t border-[#DADADA]">
-              <td className="p-4">{id}</td>
-              <td className="p-4">{customer}</td>
-              <td className="p-4">{type}</td>
-              <td className="p-4">{items}</td>
-              <td className="p-4 font-semibold text-[#98BF64]">{status}</td>
-              <td className="p-4 space-x-2">
-                <button
-                  onClick={() => startEdit({ id, customer, type, items, status })}
-                  className="px-3 py-1 rounded text-sm bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => deleteOrder(id)}
-                  className="px-3 py-1 rounded text-sm bg-red-500 hover:bg-red-600 text-white"
-                >
-                  Hapus
-                </button>
-              </td>
-            </tr>
-          ))}
-          {orders.length === 0 && (
+
+      <div className="bg-white rounded border shadow overflow-x-auto">
+        <table className="min-w-full">
+          <thead className="bg-[#E8ECE5] text-[#444]">
             <tr>
-              <td colSpan="6" className="text-center p-4 text-gray-500">
-                Belum ada pesanan.
-              </td>
+              <th className="p-3 text-left text-sm font-semibold">ID</th>
+              <th className="p-3 text-left text-sm font-semibold">Customer</th>
+              <th className="p-3 text-left text-sm font-semibold">Nomor</th>
+              <th className="p-3 text-left text-sm font-semibold">Tipe</th>
+              <th className="p-3 text-left text-sm font-semibold">Total</th>
+              <th className="p-3 text-left text-sm font-semibold">Status</th>
+              <th className="p-3 text-left text-sm font-semibold">Waktu</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan="7" className="p-4 text-center text-gray-500">Memuat data...</td>
+              </tr>
+            ) : pesanan.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="p-4 text-center text-gray-500">
+                  Belum ada pesanan.
+                </td>
+              </tr>
+            ) : (
+              pesanan.map((item) => (
+                <tr key={item.id} className="border-t text-sm">
+                  <td className="p-3">{item.id.slice(0, 8)}...</td>
+                  <td className="p-3">{item.customer}</td>
+                  <td className="p-3">{item.phone}</td>
+                  <td className="p-3">{item.type}</td>
+                  <td className="p-3">Rp {item.total.toLocaleString()}</td>
+                  <td className="p-3">
+                    <select
+                      value={item.status}
+                      onChange={(e) => handleUpdateStatus(item.id, e.target.value)}
+                      className="border px-2 py-1 rounded"
+                    >
+                      <option value="Diproses">Diproses</option>
+                      <option value="Diterima">Diterima</option>
+                      <option value="Selesai">Selesai</option>
+                      <option value="Batal">Batal</option>
+                    </select>
+                  </td>
+                  <td className="p-3">
+                    {new Date(item.created_at).toLocaleString("id-ID", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
-};
-
-export default Pesanan;
+}
