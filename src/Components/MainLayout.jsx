@@ -1,17 +1,26 @@
-import { Outlet } from "react-router-dom";
+import React from "react";
 import Sidebar from "./Sidebar";
-import Header from "./Header";
+import Header from "./Header"; // pastikan path ini sesuai struktur project-mu
+import { Outlet } from "react-router-dom";
 
-export default function MainLayout() {
+const MainLayout = () => {
   return (
-    <div className="flex min-h-screen bg-[#FAFAF8] text-[#444444] font-sans">
+    <div className="flex min-h-screen bg-[#f9f9f6]">
+      {/* Sidebar tetap menempel di kiri */}
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+
+      {/* Area kanan: Header + konten halaman */}
+      <div className="ml-72 w-full flex flex-col">
+        {/* Panggil Header yang kamu punya */}
         <Header />
-        <main className="flex-1 overflow-y-auto p-6">
+
+        {/* Outlet untuk render halaman yang aktif */}
+        <main className="flex-1 p-6 overflow-x-hidden">
           <Outlet />
         </main>
       </div>
     </div>
   );
-}
+};
+
+export default MainLayout;

@@ -1,10 +1,23 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
 
 const CartContext = createContext();
 export const useCart = () => useContext(CartContext);
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([]);
+
+  // ✅ Ambil cart dari localStorage saat pertama kali load
+  useEffect(() => {
+    const storedCart = localStorage.getItem("cart");
+    if (storedCart) {
+      setCart(JSON.parse(storedCart));
+    }
+  }, []);
+
+  // ✅ Simpan cart ke localStorage setiap kali berubah
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   const tambahItem = (item) => {
     setCart((prev) => {
@@ -38,13 +51,15 @@ export function CartProvider({ children }) {
   };
 
   return (
-    <CartContext.Provider value={{
-      cart,
-      tambahItem,
-      kurangiItem, // ✅ sekarang tersedia
-      setCart,
-      getJumlahTotal
-    }}>
+    <CartContext.Provider
+      value={{
+        cart,
+        tambahItem,
+        kurangiItem,
+        setCart,
+        getJumlahTotal,
+      }}
+    >
       {children}
     </CartContext.Provider>
   );

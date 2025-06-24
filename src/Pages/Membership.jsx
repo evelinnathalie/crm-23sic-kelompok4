@@ -1,239 +1,178 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
-const initialMembers = [
-  {
-    id: 1,
-    name: "Eka Pratama",
-    email: "eka@mail.com",
-    phone: "081234567890",
-    is_active: true,
-    loyalty_points: 125,
-    membership_level: "Silver",
-    joined_at: "2024-12-01",
-  },
-  {
-    id: 2,
-    name: "Dewi Lestari",
-    email: "dewi@mail.com",
-    phone: "082233445566",
-    is_active: true,
-    loyalty_points: 300,
-    membership_level: "Gold",
-    joined_at: "2024-11-15",
-  },
-];
+export default function Membership() {
+  const [members, setMembers] = useState([]);
+  const [loyaltyData, setLoyaltyData] = useState({});
+  const [poinInput, setPoinInput] = useState({});
+  const [filterTier, setFilterTier] = useState("Semua");
 
-export default function MemberManagement() {
-  const [members, setMembers] = useState(initialMembers);
-  const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    is_active: true,
-    loyalty_points: 0,
-    membership_level: "Bronze",
-    joined_at: new Date().toISOString().slice(0, 10),
-  });
+  useEffect(() => {
+    fetchAllMembers();
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  const fetchAllMembers = async () => {
+    const { data: users, error: userError } = await supabase
+      .from("users")
+      .select("*");
 
-  const handleAddOrUpdate = () => {
-    if (!formData.name || !formData.email || !formData.phone) {
-      alert("Semua field wajib diisi!");
+    if (userError) {
+      console.error("Gagal ambil data users:", userError.message);
       return;
     }
 
-    if (editingId !== null) {
-      setMembers((prev) =>
-        prev.map((m) => (m.id === editingId ? { ...m, ...formData } : m))
-      );
-      setEditingId(null);
-    } else {
-      const newMember = {
-        id: members.length ? Math.max(...members.map((m) => m.id)) + 1 : 1,
-        ...formData,
-      };
-      setMembers([...members, newMember]);
+    const { data: loyalty, error: loyaltyError } = await supabase
+      .from("loyalty")
+      .select("user_id, poin");
+
+    if (loyaltyError) {
+      console.error("Gagal ambil data loyalty:", loyaltyError.message);
+      return;
     }
 
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      is_active: true,
-      loyalty_points: 0,
-      membership_level: "Bronze",
-      joined_at: new Date().toISOString().slice(0, 10),
+    // Gabungkan data users + loyalty
+    const loyaltyMap = {};
+    loyalty.forEach((l) => {
+      loyaltyMap[l.user_id] = l.poin;
     });
+
+    setLoyaltyData(loyaltyMap);
+    setPoinInput(loyaltyMap); // untuk input value juga
+    setMembers(users);
   };
 
-  const handleEdit = (member) => {
-    setFormData({ ...member });
-    setEditingId(member.id);
+  const handleChangePoin = (userId, value) => {
+    setPoinInput((prev) => ({ ...prev, [userId]: value }));
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Yakin ingin menghapus member ini?")) {
-      setMembers(members.filter((m) => m.id !== id));
-      if (editingId === id) {
-        setEditingId(null);
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          is_active: true,
-          loyalty_points: 0,
-          membership_level: "Bronze",
-          joined_at: new Date().toISOString().slice(0, 10),
-        });
+  const savePoints = async (user) => {
+    const user_id = user.id;
+    const nama = user.nama;
+    const poin = parseInt(poinInput[user_id]) || 0;
+
+    const { data: existing, error: checkErr } = await supabase
+      .from("loyalty")
+      .select("id")
+      .eq("user_id", user_id)
+      .single();
+
+    if (checkErr && checkErr.code !== "PGRST116") {
+      console.error("Cek loyalty gagal:", checkErr.message);
+      return;
+    }
+
+    if (existing) {
+      const { error: updateErr } = await supabase
+        .from("loyalty")
+        .update({ poin, updated_at: new Date().toISOString() })
+        .eq("user_id", user_id);
+
+      if (updateErr) {
+        console.error("Update gagal:", updateErr.message);
+        return;
+      }
+    } else {
+      const { error: insertErr } = await supabase.from("loyalty").insert([
+        {
+          user_id,
+          nama,
+          poin,
+          updated_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (insertErr) {
+        console.error("Insert gagal:", insertErr.message);
+        return;
       }
     }
+
+    alert("Poin berhasil disimpan!");
+    fetchAllMembers(); // refresh data
+  };
+
+  const determineTier = (poin) => {
+    if (poin >= 600) return "Platinum";
+    if (poin >= 300) return "Gold";
+    if (poin >= 100) return "Silver";
+    return "Bronze";
+  };
+
+  const filteredMembers =
+    filterTier === "Semua"
+      ? members
+      : members.filter((m) => determineTier(loyaltyData[m.id] || 0) === filterTier);
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("id-ID");
   };
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Kelola Member</h1>
+      <h1 className="text-2xl font-semibold mb-4">Panel Keanggotaan Member</h1>
 
-      <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="block font-medium mb-1">Nama</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Nama"
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Email"
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Telepon</label>
-            <input
-              type="text"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Telepon"
-            />
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Level Membership</label>
-            <select
-              name="membership_level"
-              value={formData.membership_level}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-            >
-              <option value="Bronze">Bronze</option>
-              <option value="Silver">Silver</option>
-              <option value="Gold">Gold</option>
-              <option value="Platinum">Platinum</option>
-            </select>
-          </div>
-          <div>
-            <label className="block font-medium mb-1">Poin Loyalty</label>
-            <input
-              type="number"
-              name="loyalty_points"
-              value={formData.loyalty_points}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-green-400"
-              placeholder="Poin Loyalty"
-            />
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="is_active"
-              checked={formData.is_active}
-              onChange={handleInputChange}
-              id="is_active"
-              className="mr-2"
-            />
-            <label htmlFor="is_active">Aktif</label>
-          </div>
-        </div>
-
-        <button
-          onClick={handleAddOrUpdate}
-          className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+      <div className="flex gap-3 mb-4">
+        <select
+          className="border px-3 py-2 rounded"
+          value={filterTier}
+          onChange={(e) => setFilterTier(e.target.value)}
         >
-          {editingId ? "Update Member" : "Tambah"}
+          <option value="Semua">Semua Tier</option>
+          <option value="Bronze">Bronze</option>
+          <option value="Silver">Silver</option>
+          <option value="Gold">Gold</option>
+          <option value="Platinum">Platinum</option>
+        </select>
+        <button
+          onClick={() => setFilterTier("Semua")}
+          className="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300"
+        >
+          Reset
         </button>
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
         <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-100">
             <tr>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Nama</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Email</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">Telepon</th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Poin</th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Level</th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Status</th>
-              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500">Aksi</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Nama</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Tanggal Daftar</th>
+              <th className="px-4 py-2 text-center text-sm font-medium text-gray-600">Poin</th>
+              <th className="px-4 py-2 text-center text-sm font-medium text-gray-600">Tier</th>
+              <th className="px-4 py-2 text-center text-sm font-medium text-gray-600">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {members.map((m) => (
-              <tr key={m.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">{m.name}</td>
-                <td className="px-4 py-3">{m.email}</td>
-                <td className="px-4 py-3">{m.phone}</td>
-                <td className="px-4 py-3 text-center">{m.loyalty_points}</td>
-                <td className="px-4 py-3 text-center">{m.membership_level}</td>
+          <tbody className="divide-y divide-gray-100">
+            {filteredMembers.map((u) => (
+              <tr key={u.id}>
+                <td className="px-4 py-3">{u.nama}</td>
+                <td className="px-4 py-3">{formatDate(u.created_at)}</td>
                 <td className="px-4 py-3 text-center">
-                  {m.is_active ? (
-                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-600">
-                      Aktif
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-600">
-                      Tidak Aktif
-                    </span>
-                  )}
+                  <input
+                    type="number"
+                    className="border px-2 py-1 rounded w-20 text-center"
+                    value={poinInput[u.id] ?? ""}
+                    onChange={(e) => handleChangePoin(u.id, e.target.value)}
+                  />
                 </td>
-                <td className="px-4 py-3 text-center space-x-2">
+                <td className="px-4 py-3 text-center">
+                  {determineTier(loyaltyData[u.id] || 0)}
+                </td>
+                <td className="px-4 py-3 text-center">
                   <button
-                    onClick={() => handleEdit(m)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={() => savePoints(u)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
                   >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(m.id)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Hapus
+                    Simpan
                   </button>
                 </td>
               </tr>
             ))}
-            {members.length === 0 && (
+            {filteredMembers.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center py-4 text-gray-500">
-                  Tidak ada data member
+                <td colSpan="5" className="text-center py-6 text-gray-400">
+                  Tidak ada member ditemukan.
                 </td>
               </tr>
             )}

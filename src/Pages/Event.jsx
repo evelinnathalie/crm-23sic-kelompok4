@@ -1,34 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const initialEvents = [
+const STORAGE_KEY = "admin_events";
 
-  {
-    id: 1,
-    eventName: "Seminar Teknologi 2025",
-    organizer: "Universitas ABC",
-    date: "2025-07-15",
-    location: "Jakarta Convention Center",
-    status: "Akan Datang",
-  },
-  {
-    id: 2,
-    eventName: "Workshop Desain UI/UX",
-    organizer: "Komunitas Desainer Indonesia",
-    date: "2025-06-20",
-    location: "Bandung Creative Hub",
-    status: "Selesai",
-  },
+const loadEvents = () => {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+};
 
-  { id: 1, name: "Melati Daeva", email: "melati@mail.com", phone: "081234568392", lomba: "Mobile Legend", active: true },
-  { id: 2, name: "Kevin Sanjaya", email: "kevin@mail.com", phone: "089749339294", lomba: "Mobile Legend", active: false },
-  { id: 3, name: "Praven Jordan", email: "praven@mail.com", phone: "081523828928", lomba: "Mobile Legend", active: true },
-  { id: 4, name: "Jordan", email: "paven@mail.com", phone: "081523828928", lomba: "Mobile Legend", active: true },
-  
+const saveEvents = (data) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
 
-];
-
-export default function EventManagement() {
-  const [events, setEvents] = useState(initialEvents);
+export default function Event() {
+  const [events, setEvents] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     eventName: "",
@@ -36,7 +23,13 @@ export default function EventManagement() {
     date: "",
     location: "",
     status: "Akan Datang",
+    kategori: "Workshop",
+    image: ""
   });
+
+  useEffect(() => {
+    setEvents(loadEvents());
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -45,16 +38,15 @@ export default function EventManagement() {
       date: "",
       location: "",
       status: "Akan Datang",
+      kategori: "Workshop",
+      image: ""
     });
     setEditingId(null);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = () => {
@@ -63,21 +55,16 @@ export default function EventManagement() {
       return;
     }
 
+    let updatedEvents;
     if (editingId !== null) {
-      // update
-      setEvents((prev) =>
-        prev.map((evt) =>
-          evt.id === editingId ? { ...evt, ...formData } : evt
-        )
-      );
+      updatedEvents = events.map((evt) => evt.id === editingId ? { ...evt, ...formData } : evt);
     } else {
-      // tambah
-      const newEvent = {
-        id: events.length ? Math.max(...events.map((e) => e.id)) + 1 : 1,
-        ...formData,
-      };
-      setEvents([...events, newEvent]);
+      const newEvent = { id: Date.now(), ...formData };
+      updatedEvents = [...events, newEvent];
     }
+
+    setEvents(updatedEvents);
+    saveEvents(updatedEvents);
     resetForm();
   };
 
@@ -88,7 +75,9 @@ export default function EventManagement() {
 
   const handleDelete = (id) => {
     if (window.confirm("Yakin ingin menghapus event ini?")) {
-      setEvents(events.filter((e) => e.id !== id));
+      const updatedEvents = events.filter((e) => e.id !== id);
+      setEvents(updatedEvents);
+      saveEvents(updatedEvents);
       if (editingId === id) resetForm();
     }
   };
@@ -97,123 +86,116 @@ export default function EventManagement() {
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4">Kelola Event</h1>
 
-      <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white">
-        <div className="mb-2">
-          <label className="block font-medium mb-1">Nama Event</label>
-          <input
-            type="text"
-            name="eventName"
-            value={formData.eventName}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Contoh: Seminar Nasional"
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block font-medium mb-1">Penyelenggara</label>
-          <input
-            type="text"
-            name="organizer"
-            value={formData.organizer}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Nama penyelenggara"
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block font-medium mb-1">Tanggal</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-        </div>
-        <div className="mb-2">
-          <label className="block font-medium mb-1">Lokasi</label>
-          <input
-            type="text"
-            name="location"
-            value={formData.location}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-            placeholder="Tempat penyelenggaraan"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block font-medium mb-1">Status</label>
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="Akan Datang">Akan Datang</option>
-            <option value="Selesai">Selesai</option>
-            <option value="Dibatalkan">Dibatalkan</option>
-          </select>
-        </div>
+      <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white space-y-4">
+        <input
+          type="text"
+          name="eventName"
+          value={formData.eventName}
+          onChange={handleInputChange}
+          placeholder="Nama Event"
+          className="w-full px-4 py-2 border rounded"
+        />
+        <input
+          type="text"
+          name="organizer"
+          value={formData.organizer}
+          onChange={handleInputChange}
+          placeholder="Penyelenggara"
+          className="w-full px-4 py-2 border rounded"
+        />
+        <input
+          type="date"
+          name="date"
+          value={formData.date}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border rounded"
+        />
+        <input
+          type="text"
+          name="location"
+          value={formData.location}
+          onChange={handleInputChange}
+          placeholder="Lokasi"
+          className="w-full px-4 py-2 border rounded"
+        />
+        <select
+          name="status"
+          value={formData.status}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border rounded"
+        >
+          <option value="Akan Datang">Akan Datang</option>
+          <option value="Selesai">Selesai</option>
+          <option value="Dibatalkan">Dibatalkan</option>
+        </select>
+        <select
+          name="kategori"
+          value={formData.kategori}
+          onChange={handleInputChange}
+          className="w-full px-4 py-2 border rounded"
+        >
+          <option value="Workshop">Workshop</option>
+          <option value="Music">Music</option>
+          <option value="Community">Community</option>
+        </select>
+        <input
+          type="text"
+          name="image"
+          value={formData.image}
+          onChange={handleInputChange}
+          placeholder="URL Gambar (opsional)"
+          className="w-full px-4 py-2 border rounded"
+        />
+
         <button
           onClick={handleSubmit}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+          className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
         >
           {editingId ? "Update Event" : "Simpan Event"}
         </button>
       </div>
 
       <div className="overflow-x-auto bg-white rounded shadow">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full table-auto border border-gray-200">
+          <thead className="bg-gray-100 text-left">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Event</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penyelenggara</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              <th className="px-4 py-2">Nama</th>
+              <th className="px-4 py-2">Penyelenggara</th>
+              <th className="px-4 py-2">Tanggal</th>
+              <th className="px-4 py-2">Lokasi</th>
+              <th className="px-4 py-2">Status</th>
+              <th className="px-4 py-2">Aksi</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {events.map((event) => (
-              <tr key={event.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">{event.eventName}</td>
-                <td className="px-6 py-4">{event.organizer}</td>
-                <td className="px-6 py-4">{event.date}</td>
-                <td className="px-6 py-4">{event.location}</td>
-                <td className="px-6 py-4 text-center">
-                  <span
-                    className={`inline-flex px-2 text-xs leading-5 font-semibold rounded-full ${
-                      event.status === "Akan Datang"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : event.status === "Selesai"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {event.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-center space-x-2">
-                  <button
-                    className="text-blue-600 hover:text-blue-900 font-semibold"
-                    onClick={() => handleEdit(event)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-900 font-semibold"
-                    onClick={() => handleDelete(event.id)}
-                  >
-                    Hapus
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {events.length === 0 && (
+          <tbody>
+            {events.length > 0 ? (
+              events.map((event) => (
+                <tr key={event.id} className="border-t">
+                  <td className="px-4 py-2">{event.eventName}</td>
+                  <td className="px-4 py-2">{event.organizer}</td>
+                  <td className="px-4 py-2">{event.date}</td>
+                  <td className="px-4 py-2">{event.location}</td>
+                  <td className="px-4 py-2">{event.status}</td>
+                  <td className="px-4 py-2 space-x-2">
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => handleEdit(event)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="text-red-600 hover:underline"
+                      onClick={() => handleDelete(event.id)}
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
               <tr>
                 <td colSpan={6} className="text-center py-4 text-gray-500">
-                  Tidak ada data event
+                  Tidak ada event
                 </td>
               </tr>
             )}

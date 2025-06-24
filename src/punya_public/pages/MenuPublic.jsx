@@ -2,13 +2,18 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useState, useEffect } from "react";
+
 import { supabase } from "../../supabase";
+
+
+import { dummyMenu } from "../data/dummyMenu";
 
 
 export default function Menu() {
   const { tambahItem, kurangiItem, cart } = useCart();
   const [kategoriAktif, setKategoriAktif] = useState("Semua");
   const [daftarMenu, setDaftarMenu] = useState([]);
+
 
 
   useEffect(() => {
@@ -32,6 +37,17 @@ export default function Menu() {
   ];
 
 
+  useEffect(() => {
+    const storedMenus = JSON.parse(localStorage.getItem("menus"));
+    if (storedMenus && storedMenus.length > 0) {
+      setDaftarMenu(storedMenus);
+    } else {
+      setDaftarMenu(dummyMenu);
+    }
+  }, []);
+
+  const kategoriList = ["Semua", ...new Set(daftarMenu.map((item) => item.category))];
+
   const getJumlah = (id) => {
     const item = cart.find((i) => i.id === id);
     return item?.jumlah || 0;
@@ -43,6 +59,9 @@ export default function Menu() {
       id: item.id,
       nama: item.nama,
       harga: item.harga,
+
+      nama: item.name,      // samakan key dengan OrderPublic
+      harga: item.price,
       jumlah: 1,
     });
   };
@@ -58,7 +77,7 @@ export default function Menu() {
   const menuDitampilkan =
     kategoriAktif === "Semua"
       ? daftarMenu
-      : daftarMenu.filter((m) => m.kategori === kategoriAktif);
+      : daftarMenu.filter((m) => m.category === kategoriAktif);
 
 
   return (
@@ -137,7 +156,6 @@ export default function Menu() {
             ☕ Menu Monochrome Space
           </h1>
 
-
           {menuDitampilkan.length === 0 ? (
             <p style={{ color: "#666" }}>Menu belum tersedia dalam kategori ini.</p>
           ) : (
@@ -164,6 +182,8 @@ export default function Menu() {
                   <img
                     src={item.image_url || "https://via.placeholder.com/300x200"}
                     alt={item.nama}
+                    src={item.gambar || "https://via.placeholder.com/300x200"}
+                    alt={item.name}
                     style={{
                       height: "160px",
                       width: "100%",
@@ -174,6 +194,9 @@ export default function Menu() {
                     <h3 style={{ fontWeight: "bold" }}>{item.nama}</h3>
                     <p style={{ color: "#666", marginBottom: "1rem" }}>
                       Rp{item.harga.toLocaleString("id-ID")}
+                    <h3 style={{ fontWeight: "bold" }}>{item.name}</h3>
+                    <p style={{ color: "#666", marginBottom: "1rem" }}>
+                      Rp{item.price.toLocaleString("id-ID")}
                     </p>
                     <div
                       style={{
