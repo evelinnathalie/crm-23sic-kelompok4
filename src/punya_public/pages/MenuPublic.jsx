@@ -2,24 +2,16 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
 import { useState, useEffect } from "react";
-
 import { supabase } from "../../supabase";
-
-
-import { dummyMenu } from "../data/dummyMenu";
-
 
 export default function Menu() {
   const { tambahItem, kurangiItem, cart } = useCart();
   const [kategoriAktif, setKategoriAktif] = useState("Semua");
   const [daftarMenu, setDaftarMenu] = useState([]);
 
-
-
   useEffect(() => {
     fetchMenus();
   }, []);
-
 
   const fetchMenus = async () => {
     const { data, error } = await supabase.from("menus").select("*");
@@ -30,42 +22,25 @@ export default function Menu() {
     }
   };
 
-
+  // FIXED: pastikan hanya ada satu deklarasi kategoriList
   const kategoriList = [
     "Semua",
     ...new Set(daftarMenu.map((item) => item.kategori)),
   ];
-
-
-  useEffect(() => {
-    const storedMenus = JSON.parse(localStorage.getItem("menus"));
-    if (storedMenus && storedMenus.length > 0) {
-      setDaftarMenu(storedMenus);
-    } else {
-      setDaftarMenu(dummyMenu);
-    }
-  }, []);
-
-  const kategoriList = ["Semua", ...new Set(daftarMenu.map((item) => item.category))];
 
   const getJumlah = (id) => {
     const item = cart.find((i) => i.id === id);
     return item?.jumlah || 0;
   };
 
-
   const handleTambah = (item) => {
     tambahItem({
       id: item.id,
       nama: item.nama,
       harga: item.harga,
-
-      nama: item.name,      // samakan key dengan OrderPublic
-      harga: item.price,
       jumlah: 1,
     });
   };
-
 
   const handleKurang = (item) => {
     if (getJumlah(item.id) > 0) {
@@ -73,12 +48,10 @@ export default function Menu() {
     }
   };
 
-
   const menuDitampilkan =
     kategoriAktif === "Semua"
       ? daftarMenu
-      : daftarMenu.filter((m) => m.category === kategoriAktif);
-
+      : daftarMenu.filter((m) => m.kategori === kategoriAktif);
 
   return (
     <>
@@ -114,7 +87,6 @@ export default function Menu() {
             Kategori
           </h3>
 
-
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {kategoriList.map((kat) => (
               <li key={kat}>
@@ -141,7 +113,6 @@ export default function Menu() {
             ))}
           </ul>
         </aside>
-
 
         {/* Konten Menu */}
         <div style={{ flex: 1 }}>
@@ -182,8 +153,6 @@ export default function Menu() {
                   <img
                     src={item.image_url || "https://via.placeholder.com/300x200"}
                     alt={item.nama}
-                    src={item.gambar || "https://via.placeholder.com/300x200"}
-                    alt={item.name}
                     style={{
                       height: "160px",
                       width: "100%",
@@ -194,9 +163,6 @@ export default function Menu() {
                     <h3 style={{ fontWeight: "bold" }}>{item.nama}</h3>
                     <p style={{ color: "#666", marginBottom: "1rem" }}>
                       Rp{item.harga.toLocaleString("id-ID")}
-                    <h3 style={{ fontWeight: "bold" }}>{item.name}</h3>
-                    <p style={{ color: "#666", marginBottom: "1rem" }}>
-                      Rp{item.price.toLocaleString("id-ID")}
                     </p>
                     <div
                       style={{
