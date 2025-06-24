@@ -14,14 +14,10 @@ import MainLayout from "./Components/MainLayout";
 import Dashboard from "./Pages/Dashboard";
 import Pesanan from "./Pages/Pesanan";
 import Menu from "./Pages/Menu";
-import CustomerManagement from "./Pages/CustomerManagement";
 import EventManagement from "./Pages/Event";
-import ProductManagement from "./Pages/ProdukManagement";
-import SalesManagement from "./Pages/SalesManagement";
 import Reservasi from "./Pages/Reservasi";
 import PromoManagement from "./Pages/Promosi";
 import MemberManagement from "./Pages/Membership";
-import Stock from "./Pages/Stock";
 
 // 🌐 Public pages
 import HomePublic from "./punya_public/pages/HomePublic";
@@ -98,14 +94,10 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pesanan" element={<Pesanan />} />
         <Route path="/menu/monochrome" element={<Menu />} />
-        <Route path="/pelanggan" element={<CustomerManagement />} />
         <Route path="/event" element={<EventManagement />} />
-        <Route path="/produk" element={<ProductManagement />} />
-        <Route path="/penjualan" element={<SalesManagement />} />
         <Route path="/reservasi" element={<Reservasi />} />
         <Route path="/promosi" element={<PromoManagement />} />
         <Route path="/member" element={<MemberManagement />} />
-        <Route path="/stock" element={<Stock />} />
       </Route>
 
       {/* 🔚 Catch-all fallback */}

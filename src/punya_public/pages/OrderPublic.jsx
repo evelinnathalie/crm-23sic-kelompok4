@@ -86,7 +86,7 @@ export default function OrderPublic() {
         ]);
       }
 
-      await supabase.from("loyalty_history").insert([
+      const { error: historyError } = await supabase.from("loyalty_history").insert([
         {
           nama: user.nama,
           keterangan: `Order ${totalItem} item`,
@@ -95,6 +95,14 @@ export default function OrderPublic() {
           user_id: user.id,
         },
       ]);
+      
+      if (historyError) {
+        console.error("Gagal mencatat histori poin:", historyError.message);
+        alert("Gagal mencatat histori poin: " + historyError.message);
+      } else {
+        console.log("Histori poin berhasil disimpan!");
+      }
+      
 
       setCart([]);
       setSubmitted(true);

@@ -1,41 +1,34 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
+import Cookies from "js-cookie";
 import { supabase } from "../../supabase";
+
+const COOKIE_KEY = "mc_user";            // nama cookie
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  // Cek session saat pertama kali load (tanpa localStorage)
-  useEffect(() => {
-    checkSession();
-  }, []);
-
-  const checkSession = async () => {
-    const { data, error } = await supabase.auth.getSession();
-    if (data?.session?.user) {
-      const { user: supaUser } = data.session;
-      const { data: profile } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", supaUser.id)
-        .single();
-      if (profile) {
-        setUser({ id: profile.id, nama: profile.nama, role: "member" });
-      }
+  /* 1️⃣  baca cookie saat inisialisasi */
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = Cookies.get(COOKIE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
     }
-  };
+  });
 
+  /* 2️⃣  login */
   const login = async ({ nama, password }) => {
-    // Login Admin (hardcoded)
+    // — ADMIN hard-code —
     if (nama === "admin" && password === "123") {
-      const adminUser = { nama: "admin", role: "admin" };
-      setUser(adminUser);
+      const admin = { nama: "admin", role: "admin" };
+      setUser(admin);
+      Cookies.set(COOKIE_KEY, JSON.stringify(admin));   // ⚠️ tanpa expires → cookie sesi
       return true;
     }
 
-    // Cek user di tabel Supabase
+    // — Cek tabel users —
     const { data, error } = await supabase
       .from("users")
       .select("*")
@@ -43,19 +36,20 @@ export function AuthProvider({ children }) {
       .eq("password", password)
       .single();
 
-      if (data && !error) {
-        const memberUser = { id: data.id, nama: data.nama, role: "member" }; // Tambahkan id di sini
-        setUser(memberUser);
-        return true;
-      }
-      
-
+    if (data && !error) {
+      const member = { id: data.id, nama: data.nama, role: "member" };
+      setUser(member);
+      Cookies.set(COOKIE_KEY, JSON.stringify(member));  // ← simpan
+      return true;
+    }
     return false;
   };
 
-  const logout = () => {
+  /* 3️⃣  logout */
+  const logout = async () => {
     setUser(null);
-    supabase.auth.signOut(); // optional, kalau pakai auth resmi
+    Cookies.remove(COOKIE_KEY);
+    await supabase.auth.signOut();  // tak mengapa walau session tidak ada
   };
 
   return (

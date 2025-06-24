@@ -1,22 +1,9 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase";
 
-const STORAGE_KEY = "admin_events";
-
-const loadEvents = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-};
-
-const saveEvents = (data) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-};
 
 export default function Event() {
   const [events, setEvents] = useState([]);
-  const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
     eventName: "",
     organizer: "",
@@ -24,12 +11,22 @@ export default function Event() {
     location: "",
     status: "Akan Datang",
     kategori: "Workshop",
-    image: ""
+    image: "",
   });
+  const [editingId, setEditingId] = useState(null);
+
 
   useEffect(() => {
-    setEvents(loadEvents());
+    fetchEvents();
   }, []);
+
+
+  const fetchEvents = async () => {
+    const { data, error } = await supabase.from("event").select("*").order("date", { ascending: true });
+    if (error) console.error("Gagal ambil event:", error.message);
+    else setEvents(data);
+  };
+
 
   const resetForm = () => {
     setFormData({
@@ -39,54 +36,73 @@ export default function Event() {
       location: "",
       status: "Akan Datang",
       kategori: "Workshop",
-      image: ""
+      image: "",
     });
     setEditingId(null);
   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = () => {
-    if (!formData.eventName || !formData.organizer || !formData.date || !formData.location) {
+
+  const handleSubmit = async () => {
+    const { eventName, organizer, date, location } = formData;
+    if (!eventName || !organizer || !date || !location) {
       alert("Semua field wajib diisi!");
       return;
     }
 
-    let updatedEvents;
-    if (editingId !== null) {
-      updatedEvents = events.map((evt) => evt.id === editingId ? { ...evt, ...formData } : evt);
+
+    if (editingId) {
+      const { error } = await supabase
+        .from("event")
+        .update(formData)
+        .eq("id", editingId);
+      if (error) {
+        alert("Gagal update event: " + error.message);
+        return;
+      }
     } else {
-      const newEvent = { id: Date.now(), ...formData };
-      updatedEvents = [...events, newEvent];
+      const { error } = await supabase.from("event").insert([formData]);
+      if (error) {
+        alert("Gagal menambah event: " + error.message);
+        return;
+      }
     }
 
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
+
     resetForm();
+    fetchEvents();
   };
 
-  const handleEdit = (event) => {
-    setFormData({ ...event });
-    setEditingId(event.id);
+
+  const handleEdit = (evt) => {
+    setFormData(evt);
+    setEditingId(evt.id);
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Yakin ingin menghapus event ini?")) {
-      const updatedEvents = events.filter((e) => e.id !== id);
-      setEvents(updatedEvents);
-      saveEvents(updatedEvents);
-      if (editingId === id) resetForm();
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Yakin ingin menghapus event ini?")) return;
+    const { error } = await supabase.from("event").delete().eq("id", id);
+    if (error) {
+      alert("Gagal hapus event: " + error.message);
+      return;
     }
+    fetchEvents();
+    if (editingId === id) resetForm();
   };
+
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Kelola Event</h1>
+      <h1 className="text-2xl font-bold mb-4">Kelola Event</h1>
 
-      <div className="mb-6 p-4 border border-gray-300 rounded shadow-sm bg-white space-y-4">
+
+      <div className="mb-6 p-4 border rounded shadow-sm bg-white space-y-4">
         <input
           type="text"
           name="eventName"
@@ -147,6 +163,7 @@ export default function Event() {
           className="w-full px-4 py-2 border rounded"
         />
 
+
         <button
           onClick={handleSubmit}
           className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
@@ -154,6 +171,7 @@ export default function Event() {
           {editingId ? "Update Event" : "Simpan Event"}
         </button>
       </div>
+
 
       <div className="overflow-x-auto bg-white rounded shadow">
         <table className="min-w-full table-auto border border-gray-200">

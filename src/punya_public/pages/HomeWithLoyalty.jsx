@@ -87,7 +87,6 @@ export default function HomeWithLoyalty() {
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">
               Selamat datang kembali, <span className="text-green-700">{user?.nama}</span>
             </h1>
-            <p className="text-gray-600">Kelola poin loyalty dan nikmati benefit eksklusif</p>
           </div>
 
           <div className={`bg-gradient-to-r ${tiers[membershipTier].color} text-white p-6 lg:p-8 rounded-2xl shadow-xl mb-8`}>
@@ -133,8 +132,8 @@ export default function HomeWithLoyalty() {
               {history.length === 0 ? (
                 <EmptyState title="Belum ada aktivitas" desc="Mulai berbelanja untuk mendapatkan poin!" />
               ) : (
-                <div className="space-y-4">
-                  {(showAll ? history : history.slice(0, 5)).map((h, i) => (
+                <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                  {history.map((h, i) => (
                     <div key={i} className="p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
                       <div className="flex justify-between">
                         <div>
@@ -148,12 +147,8 @@ export default function HomeWithLoyalty() {
                       </div>
                     </div>
                   ))}
-                  {history.length > 5 && (
-                    <button onClick={() => setShowAll(!showAll)} className="text-sm text-green-600 font-medium">
-                      {showAll ? "Sembunyikan" : `Lihat Semua (${history.length})`}
-                    </button>
-                  )}
                 </div>
+
               )}
             </Panel>
 
