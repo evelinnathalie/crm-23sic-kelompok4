@@ -2,6 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function MenuCard({ image, name, desc, price, isPopular = false }) {
   return (
@@ -46,13 +58,24 @@ function TestimonialCard({ name, review, rating }) {
 
 function Home() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  
+  const [form, setForm] = useState({
+    suhu_preferensi: 'dingin',
+    jenis_minuman: 'kopi',
+    rasa: 'manis',
+    kebutuhan_makanan: 'minuman_saja',
+    waktu_kunjungan: 'pagi',
+    budget: 30000,
+    topping: 'boba'
+  });
+  const [result, setResult] = useState('');
+  const [confidence, setConfidence] = useState(null);
+
   const testimonials = [
-    { name: "Sarah M.", review: "Kopi terbaik di Pekanbaru! Suasana yang tenang dan pelayanan yang ramah sekali.", rating: 5 },
-    { name: "Ahmad R.", review: "Tempat favorit untuk meeting dan kerja. WiFi cepat dan kopinya mantap banget!", rating: 5 },
-    { name: "Lisa K.", review: "Cold brew mereka juara! Selalu jadi pilihan pertama kalau mau ngopi enak.", rating: 5 }
+    { name: 'Sarah M.', review: 'Kopi terbaik di Pekanbaru! Suasana yang tenang dan pelayanan yang ramah sekali.', rating: 5 },
+    { name: 'Ahmad R.', review: 'Tempat favorit untuk meeting dan kerja. WiFi cepat dan kopinya mantap banget!', rating: 5 },
+    { name: 'Lisa K.', review: 'Cold brew mereka juara! Selalu jadi pilihan pertama kalau mau ngopi enak.', rating: 5 }
   ];
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
@@ -60,124 +83,109 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  const updateForm = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handlePredict = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('https://c5b9-35-245-19-67.ngrok-free.app/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      });
+      const json = await res.json();
+      if (json.success) {
+        setResult(json.predicted_menu);
+        setConfidence(json.confidence || null);
+      } else {
+        setResult('Terjadi kesalahan: ' + json.error);
+      }
+    } catch (err) {
+      setResult('Gagal terhubung ke server.');
+    }
+  };
+
   return (
     <>
       <Navbar />
 
       {/* Hero Section */}
       <section id="home" className="relative bg-gradient-to-br from-[#6B7A47] via-[#5A6B3E] to-[#4A5A32] text-white min-h-screen flex items-center overflow-hidden">
-        <div className="absolute top-20 left-10 text-6xl opacity-20 animate-pulse">☕</div>
-        <div className="absolute top-40 right-20 text-4xl opacity-15 animate-bounce">🌿</div>
-        <div className="absolute bottom-32 left-1/4 text-5xl opacity-10 animate-pulse">☕</div>
-        
         <div className="container mx-auto px-6 text-center relative z-10">
-          <div className="animate-fade-in-up">
-            <h1 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-white via-green-100 to-green-50 bg-clip-text text-transparent leading-tight">
-              Monochrome Space
-            </h1>
-            <p className="text-xl md:text-2xl text-green-100 max-w-4xl mx-auto mb-12 leading-relaxed">
-              Ruang kopi minimalis premium di Pekanbaru. 
-              Nikmati kopi berkualitas tinggi dalam suasana yang tenang dan inspiratif.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/order" className="bg-white text-[#5A6B3E] px-10 py-4 rounded-full font-bold text-lg hover:bg-green-50 transition-all transform hover:scale-105 shadow-2xl hover:shadow-white/20 text-center">
-                🛒 Pesan Sekarang
-              </Link>
-              <Link to="/menu" className="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white/10 transition-all transform hover:scale-105 backdrop-blur-sm text-center">
-                📋 Lihat Menu
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Menu Section */}
-      <section id="menu" className="py-24 bg-gradient-to-b from-[#f8f9f6] to-[#eef2e8]">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-[#4A5A32] mb-6">Menu Unggulan</h2>
-            <p className="text-xl text-[#5a6b3e] max-w-3xl mx-auto">Signature coffee dan menu terbaik yang dibuat dengan penuh cinta dan keahlian tinggi</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            <MenuCard
-              image="☕"
-              name="Signature Espresso"
-              desc="Espresso premium dengan blend khas house yang dipanggang dengan sempurna"
-              price="Rp 35.000"
-              isPopular={true}
-            />
-            <MenuCard
-              image="🥤"
-              name="Cold Brew Special"
-              desc="Cold brew ekstraksi 12 jam untuk rasa yang smooth dan kaya aroma"
-              price="Rp 42.000"
-            />
-            <MenuCard
-              image="🍰"
-              name="Chocolate Cake"
-              desc="Kue coklat Belgian lembut dengan cream vanilla house-made terbaik"
-              price="Rp 28.000"
-            />
-            <MenuCard
-              image="🥪"
-              name="Club Sandwich"
-              desc="Sandwich premium dengan isian segar dan roti artisan berkualitas"
-              price="Rp 45.000"
-              isPopular={true}
-            />
-          </div>
-          <div className="text-center mt-16">
-            <Link to="/menu" className="bg-gradient-to-r from-[#4A5A32] to-[#6B7A47] text-white px-10 py-4 rounded-full font-bold text-lg hover:shadow-xl transition-all transform hover:scale-105 inline-block text-center">
-              📖 Lihat Menu Lengkap
+          <h1 className="text-6xl md:text-7xl font-bold mb-8 bg-gradient-to-r from-white via-green-100 to-green-50 bg-clip-text text-transparent leading-tight">
+            Monochrome Space
+          </h1>
+          <p className="text-xl md:text-2xl text-green-100 max-w-4xl mx-auto mb-12 leading-relaxed">
+            Ruang kopi minimalis premium di Pekanbaru. Nikmati kopi berkualitas tinggi dalam suasana yang tenang dan inspiratif.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Link to="/order" className="bg-white text-[#5A6B3E] px-10 py-4 rounded-full font-bold text-lg hover:bg-green-50 transition-all transform hover:scale-105 shadow-2xl hover:shadow-white/20 text-center">
+              🛒 Pesan Sekarang
+            </Link>
+            <Link to="/menu" className="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white/10 transition-all transform hover:scale-105 backdrop-blur-sm text-center">
+              📋 Lihat Menu
             </Link>
           </div>
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-24 bg-gradient-to-b from-[#eef2e8] to-[#e6ebe0]">
-        <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-20">
-              <h2 className="text-5xl font-bold text-[#4A5A32] mb-8">Tentang Kami</h2>
-              <p className="text-xl text-[#5a6b3e] leading-relaxed max-w-4xl mx-auto">
-                Menciptakan ruang yang sempurna untuk penikmat kopi sejati. 
-                Biji kopi pilihan terbaik diolah dengan teknik brewing modern dalam atmosfer minimalis yang menenangkan jiwa.
-              </p>
+      {/* Predict Section */}
+      <section id="predict" className="py-24 bg-gradient-to-b from-[#e6ebe0] to-[#f8f9f6]">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <h3 className="text-4xl font-bold text-[#4A5A32] text-center mb-10">🔍 Prediksi Menu Favoritmu</h3>
+          <form onSubmit={handlePredict} className="space-y-6">
+            {[
+              { label: 'Suhu Minuman', key: 'suhu_preferensi', options: ['dingin', 'panas'] },
+              { label: 'Jenis Minuman', key: 'jenis_minuman', options: ['kopi', 'non-kopi'] },
+              { label: 'Rasa', key: 'rasa', options: ['manis', 'pahit', 'creamy', 'asam', 'cokelat'] },
+              { label: 'Topping', key: 'topping', options: ['boba', 'whip cream', 'espresso shot', 'keju', 'oreo'] },
+              { label: 'Kebutuhan Makanan', key: 'kebutuhan_makanan', options: ['minuman_saja', 'paket_dengan_snack'] },
+              { label: 'Waktu Kunjungan', key: 'waktu_kunjungan', options: ['pagi', 'siang', 'malam'] }
+            ].map(({ label, key, options }) => (
+              <div key={key}>
+                <label className="block text-[#4A5A32] font-semibold mb-1">{label}</label>
+                <select className="w-full p-3 rounded-xl" value={form[key]} onChange={(e) => updateForm(key, e.target.value)}>
+                  {options.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            ))}
+            <div>
+              <label className="block text-[#4A5A32] font-semibold mb-1">Budget (Rp)</label>
+              <input type="number" className="w-full p-3 rounded-xl" value={form.budget} onChange={(e) => updateForm('budget', e.target.value)} />
             </div>
-            <div className="grid md:grid-cols-3 gap-12 mb-20">
-              <div className="text-center group">
-                <div className="text-7xl font-bold text-[#4A5A32] mb-4 group-hover:scale-110 transition-transform duration-300">5+</div>
-                <p className="text-[#5a6b3e] text-xl font-semibold">Tahun Pengalaman</p>
-              </div>
-              <div className="text-center group">
-                <div className="text-7xl font-bold text-[#4A5A32] mb-4 group-hover:scale-110 transition-transform duration-300">1000+</div>
-                <p className="text-[#5a6b3e] text-xl font-semibold">Member Setia</p>
-              </div>
-              <div className="text-center group">
-                <div className="text-7xl font-bold text-[#4A5A32] mb-4 group-hover:scale-110 transition-transform duration-300">50+</div>
-                <p className="text-[#5a6b3e] text-xl font-semibold">Menu Pilihan</p>
-              </div>
-            </div>
+            <button type="submit" className="bg-[#4A5A32] text-white px-6 py-3 rounded-full font-bold hover:scale-105 transition">
+              Prediksi Menu
+            </button>
+          </form>
 
-            <div className="bg-gradient-to-br from-[#d4d9c7]/50 to-[#c8d0b8]/50 rounded-3xl p-12 backdrop-blur-sm border-2 border-[#e8ebe4]">
-              <h3 className="text-4xl font-bold text-[#4A5A32] text-center mb-12">💬 Kata Mereka</h3>
-              <div className="max-w-3xl mx-auto">
-                <TestimonialCard {...testimonials[currentTestimonial]} />
-              </div>
-              <div className="flex justify-center mt-8 space-x-3">
-                {testimonials.map((_, index) => (
-                  <button 
-                    key={index}
-                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                      index === currentTestimonial ? 'bg-[#4A5A32] scale-125' : 'bg-[#c8d0b8] hover:bg-[#b8c4a8]'
-                    }`}
-                    onClick={() => setCurrentTestimonial(index)}
-                  />
-                ))}
-              </div>
+          {result && (
+            <div className="mt-10 text-center bg-white p-6 rounded-xl shadow-md">
+              <h4 className="text-[#4A5A32] font-bold text-xl mb-2">🎯 Menu Favoritmu:</h4>
+              <p className="text-2xl font-semibold text-[#6B7A47]">{result}</p>
             </div>
-          </div>
+          )}
+
+          {confidence && (
+            <div className="mt-10 bg-white p-6 rounded-xl shadow-md">
+              <h4 className="text-[#4A5A32] font-bold text-xl mb-4 text-center">📊 Tingkat Keyakinan Model</h4>
+              <Bar data={{
+                labels: Object.keys(confidence),
+                datasets: [{
+                  label: 'Confidence %',
+                  data: Object.values(confidence),
+                  backgroundColor: '#6B7A47'
+                }]
+              }} options={{
+                scales: {
+                  y: { beginAtZero: true, ticks: { stepSize: 10 } }
+                }
+              }} />
+            </div>
+          )}
         </div>
       </section>
 
