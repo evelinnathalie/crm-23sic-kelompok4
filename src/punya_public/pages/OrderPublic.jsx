@@ -1,188 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 import { supabase } from "../../supabase";
 
-// Constants
-const ORDER_TYPES = {
-  DINE_IN: 'dine-in',
-  TAKEAWAY: 'takeaway'
-};
-
-const ORDER_STATUS = {
-  PROCESSING: 'Diproses'
-};
-
-const LOYALTY_POINTS_PER_ITEM = 2;
-
-const PHONE_REGEX = /^08\d{8,12}$/;
-
-// Validation utilities
-const validatePhoneNumber = (phone) => {
-  return PHONE_REGEX.test(phone);
-};
-
-const validateForm = (form, agree) => {
-  const errors = [];
-  
-  if (!form.nama?.trim()) {
-    errors.push('Nama pemesan harus diisi');
-  }
-  
-  if (!form.nomor?.trim()) {
-    errors.push('Nomor WhatsApp harus diisi');
-  } else if (!validatePhoneNumber(form.nomor)) {
-    errors.push('Format nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx');
-  }
-  
-  if (!agree) {
-    errors.push('Harap centang persetujuan ketentuan pesanan');
-  }
-  
-  return errors;
-};
-
-// Loading component
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center">
-    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-700"></div>
-  </div>
-);
-
-// Auth required modal
-const AuthRequiredModal = () => (
-  <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-      <div className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 p-8 text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div className="relative z-10">
-          <div className="w-16 h-16 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Akses Terbatas</h2>
-          <p className="text-green-100 text-sm">Masuk untuk melanjutkan pemesanan dan nikmati keuntungan eksklusif</p>
-        </div>
-      </div>
-      
-      <div className="p-8">
-        <div className="mb-6">
-          <h3 className="font-semibold text-gray-800 mb-3">Keuntungan Member:</h3>
-          <ul className="space-y-2 text-sm text-gray-600">
-            <li className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Dapatkan poin loyalty setiap pemesanan
-            </li>
-            <li className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Tukar poin dengan voucher menarik
-            </li>
-            <li className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              Akses fitur reservasi dan event eksklusif
-            </li>
-          </ul>
-        </div>
-        
-        <div className="flex gap-3">
-          <Link to="/login" className="flex-1">
-            <button className="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-semibold transition-colors duration-200">
-              Masuk
-            </button>
-          </Link>
-          <Link to="/register" className="flex-1">
-            <button className="w-full border border-green-600 text-green-700 hover:bg-green-50 py-3 rounded-xl font-semibold transition-colors duration-200">
-              Daftar
-            </button>
-          </Link>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Success modal
-const OrderSuccessModal = ({ order, onClose }) => (
-  <div className="bg-white rounded-3xl shadow-2xl p-8 text-center">
-    <div className="w-20 h-20 bg-green-100 rounded-full mx-auto mb-6 flex items-center justify-center">
-      <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
-    </div>
-    
-    <h2 className="text-2xl font-bold text-green-700 mb-4">Pesanan Berhasil!</h2>
-    <p className="text-gray-600 mb-6">Terima kasih! Pesanan Anda sedang diproses dan akan segera disiapkan.</p>
-    
-    <div className="bg-gray-50 rounded-2xl p-6 mb-6 text-left">
-      <h3 className="font-semibold text-gray-800 mb-4">Detail Pesanan:</h3>
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-600">ID Pesanan:</span>
-          <span className="font-mono font-semibold">#{order.id}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Tipe Pesanan:</span>
-          <span className="font-semibold">{order.type}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Total Pembayaran:</span>
-          <span className="font-semibold text-green-700">Rp {order.total?.toLocaleString()}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600">Poin Loyalty:</span>
-          <span className="font-semibold text-amber-600">+{order.poin} poin</span>
-        </div>
-      </div>
-    </div>
-    
-    <div className="flex gap-4">
-      <Link to="/menu" className="flex-1">
-        <button className="w-full py-3 bg-green-700 hover:bg-green-800 text-white rounded-xl font-semibold transition-colors duration-200">
-          Pesan Lagi
-        </button>
-      </Link>
-      <Link to="/home" className="flex-1">
-        <button className="w-full py-3 border border-green-700 text-green-700 hover:bg-green-50 rounded-xl font-semibold transition-colors duration-200">
-          Ke Beranda
-        </button>
-      </Link>
-    </div>
-  </div>
-);
-
-// Main component
 export default function OrderPublic() {
   const { cart, setCart } = useCart();
   const { user } = useAuth();
 
-  // State management
-  const [form, setForm] = useState({
-    nama: "",
-    nomor: "",
-    tipe: ORDER_TYPES.DINE_IN
-  });
+  const [form, setForm] = useState({ nama: "", nomor: "", tipe: "dine-in" });
   const [submitted, setSubmitted] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
   const [agree, setAgree] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errors, setErrors] = useState([]);
 
-  // Initialize form with user data
   useEffect(() => {
     if (user) {
-      setForm(prev => ({
+      setForm((prev) => ({
         ...prev,
         nama: user.nama || "",
         nomor: user.nomor || "",
@@ -190,155 +26,150 @@ export default function OrderPublic() {
     }
   }, [user]);
 
-  // Calculate totals
-  const cartSummary = React.useMemo(() => {
-    const totalItems = cart.reduce((sum, item) => sum + item.jumlah, 0);
-    const totalPrice = cart.reduce((sum, item) => sum + (item.harga * item.jumlah), 0);
-    const loyaltyPoints = totalItems * LOYALTY_POINTS_PER_ITEM;
-    
-    return { totalItems, totalPrice, loyaltyPoints };
-  }, [cart]);
+  const total = cart.reduce((sum, i) => sum + i.harga * i.jumlah, 0);
 
-  // Handle form input changes
-  const handleInputChange = useCallback((field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-    // Clear errors when user starts typing
-    if (errors.length > 0) {
-      setErrors([]);
-    }
-  }, [errors.length]);
-
-  // Create order in database
-  const createOrder = async (orderData) => {
-    const { data, error } = await supabase
-      .from("orders")
-      .insert([orderData])
-      .select()
-      .single();
-    
-    if (error) throw new Error(`Failed to create order: ${error.message}`);
-    return data;
-  };
-
-  // Update loyalty points
-  const updateLoyaltyPoints = async (userId, customerName, points) => {
-    try {
-      // Check existing loyalty record
-      const { data: existing, error: fetchError } = await supabase
-        .from("loyalty")
-        .select("id, poin")
-        .eq("user_id", userId)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      // Update or create loyalty record
-      if (existing) {
-        const { error: updateError } = await supabase
-          .from("loyalty")
-          .update({ 
-            poin: existing.poin + points, 
-            updated_at: new Date().toISOString() 
-          })
-          .eq("id", existing.id);
-        
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from("loyalty")
-          .insert([{
-            customer: customerName,
-            poin: points,
-            user_id: userId,
-            updated_at: new Date().toISOString(),
-          }]);
-        
-        if (insertError) throw insertError;
-      }
-
-      // Add to loyalty history
-      const { error: historyError } = await supabase
-        .from("loyalty_history")
-        .insert([{
-          nama: customerName,
-          keterangan: `Order ${cartSummary.totalItems} item`,
-          poin: points,
-          tanggal: new Date().toISOString().slice(0, 10),
-          user_id: userId,
-        }]);
-
-      if (historyError) {
-        console.error("Failed to record loyalty history:", historyError);
-        // Don't throw here as the main order was successful
-      }
-    } catch (error) {
-      console.error("Loyalty update failed:", error);
-      throw new Error("Failed to update loyalty points");
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Clear previous errors
-    setErrors([]);
-    
-    // Validate form
-    const validationErrors = validateForm(form, agree);
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
+    if (!form.nomor.match(/^08\d{8,12}$/)) {
+      alert("Format nomor WhatsApp tidak valid. Gunakan format 08xxxxxxxxxx");
       return;
     }
-
-    // Check if cart is empty
-    if (cart.length === 0) {
-      setErrors(['Keranjang belanja kosong. Silakan tambahkan item terlebih dahulu.']);
+    if (!agree) {
+      alert("Harap centang persetujuan ketentuan pesanan");
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      // Prepare order data
-      const orderData = {
-        nama: form.nama.trim(),
-        phone: form.nomor.trim(),
-        type: form.tipe === ORDER_TYPES.DINE_IN ? "Dine In" : "Takeaway",
-        items: cart.map(item => `${item.nama} × ${item.jumlah}`).join(", "),
-        total: cartSummary.totalPrice,
-        status: ORDER_STATUS.PROCESSING,
-        created_at: new Date().toISOString(),
-        user_id: user.id,
-      };
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert([
+          {
+            nama: form.nama,
+            phone: form.nomor,
+            type: form.tipe === "dine-in" ? "Dine In" : "Takeaway",
+            items: cart.map((i) => `${i.nama} × ${i.jumlah}`).join(", "),
+            total,
+            status: "Diproses",
+            created_at: new Date().toISOString(),
+            user_id: user.id,
+          },
+        ])
+        .select()
+        .single();
 
-      // Create order
-      const order = await createOrder(orderData);
+      if (orderError) throw orderError;
 
-      // Update loyalty points
-      await updateLoyaltyPoints(user.id, user.nama, cartSummary.loyaltyPoints);
+      const totalItem = cart.reduce((sum, item) => sum + item.jumlah, 0);
+      const poin = totalItem * 2;
 
-      // Success - clear cart and show success
+      const { data: existing } = await supabase
+        .from("loyalty")
+        .select("id, poin")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existing) {
+        await supabase
+          .from("loyalty")
+          .update({ poin: existing.poin + poin, updated_at: new Date().toISOString() })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("loyalty").insert([
+          {
+            customer: user.nama,
+            poin,
+            user_id: user.id,
+            updated_at: new Date().toISOString(),
+          },
+        ]);
+      }
+
+      const { error: historyError } = await supabase.from("loyalty_history").insert([
+        {
+          nama: user.nama,
+          keterangan: `Order ${totalItem} item`,
+          poin,
+          tanggal: new Date().toISOString().slice(0, 10),
+          user_id: user.id,
+        },
+      ]);
+      
+      if (historyError) {
+        console.error("Gagal mencatat histori poin:", historyError.message);
+        alert("Gagal mencatat histori poin: " + historyError.message);
+      } else {
+        console.log("Histori poin berhasil disimpan!");
+      }
+      
+
       setCart([]);
-      setLastOrder({ ...order, poin: cartSummary.loyaltyPoints });
       setSubmitted(true);
-
-    } catch (error) {
-      console.error("Order submission failed:", error);
-      setErrors([error.message || "Gagal memproses pesanan. Silakan coba lagi."]);
+      setLastOrder({ ...order, poin });
+    } catch (err) {
+      console.error(err);
+      alert("Gagal memproses pesanan. Coba lagi.");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Render auth required modal if user not logged in
   if (!user) {
     return (
       <>
         <Navbar />
-        <AuthRequiredModal />
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all duration-300 hover:scale-105">
+            <div className="bg-gradient-to-br from-green-600 via-green-700 to-green-800 p-8 text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 animate-pulse"></div>
+              <div className="relative z-10">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">Akses Terbatas</h2>
+                <p className="text-green-100 text-sm">Masuk untuk melanjutkan pemesanan</p>
+              </div>
+            </div>
+            <div className="p-8">
+              <div className="mb-6 text-sm text-gray-600">
+                <h3 className="font-semibold text-gray-800 mb-3">Keuntungan Member:</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <span>Dapatkan poin loyalty setiap pemesanan</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+                      </svg>
+                    </div>
+                    <span>Tukar poin dengan voucher</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <Link to="/login" className="flex-1">
+                  <button className="w-full bg-gradient-to-r from-green-700 to-green-800 text-white py-3 rounded-xl font-semibold transform transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    Masuk
+                  </button>
+                </Link>
+                <Link to="/register" className="flex-1">
+                  <button className="w-full border-2 border-green-600 text-green-700 py-3 rounded-xl font-semibold transform transition-all duration-200 hover:bg-green-50 hover:scale-105">
+                    Daftar
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
         <Footer />
       </>
     );
@@ -347,153 +178,188 @@ export default function OrderPublic() {
   return (
     <>
       <Navbar />
-      <main className="bg-gradient-to-br from-gray-50 via-green-50 to-gray-100 min-h-screen pt-32 pb-12">
-        <div className="max-w-4xl mx-auto px-4">
+      <main className="bg-gradient-to-br from-gray-50 via-green-50 to-gray-100 min-h-screen pt-32 pb-12 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-green-200/30 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-1/2 -left-1/2 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-4 relative z-10">
           {submitted && lastOrder ? (
-            <OrderSuccessModal 
-              order={lastOrder} 
-              onClose={() => setSubmitted(false)} 
-            />
-          ) : (
-            <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-green-600 to-green-700 p-6">
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 text-center border border-white/20 transform transition-all duration-500 hover:scale-105">
+              <div className="mb-6">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                   </svg>
-                  Form Pemesanan
-                </h1>
-                <p className="text-green-100 text-sm mt-1">Lengkapi data pemesanan Anda</p>
+                </div>
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent mb-2">
+                  Pesanan Berhasil!
+                </h2>
+                <p className="text-gray-600 text-lg">Terima kasih, pesanan Anda sedang diproses</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* Error Display */}
-                {errors.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-start gap-2">
-                      <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                      <div>
-                        <h3 className="font-semibold text-red-800 text-sm">Terdapat kesalahan:</h3>
-                        <ul className="mt-1 text-sm text-red-700 space-y-1">
-                          {errors.map((error, index) => (
-                            <li key={index}>• {error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-2xl mb-6 text-left border border-gray-200">
+                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  Detail Pesanan
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">ID Pesanan</span>
+                    <span className="font-mono bg-gray-200 px-2 py-1 rounded text-sm">{lastOrder.id}</span>
                   </div>
-                )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Tipe Pesanan</span>
+                    <span className="font-semibold">{lastOrder.type}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Pembayaran</span>
+                    <span className="font-bold text-green-700 text-lg">Rp {lastOrder.total.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Poin Loyalty</span>
+                    <span className="font-bold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-sm">
+                      +{lastOrder.poin} poin
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                {/* Form Fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nama Pemesan *
+              <div className="flex gap-4">
+                <Link to="/menu" className="flex-1">
+                  <button className="w-full py-4 bg-gradient-to-r from-green-700 to-green-800 text-white rounded-xl font-semibold transform transition-all duration-200 hover:scale-105 hover:shadow-lg">
+                    🍽️ Order Lagi
+                  </button>
+                </Link>
+                <Link to="/home" className="flex-1">
+                  <button className="w-full py-4 border-2 border-green-700 text-green-700 rounded-xl font-semibold transform transition-all duration-200 hover:bg-green-50 hover:scale-105">
+                    🏠 Ke Beranda
+                  </button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 space-y-6 border border-white/20">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                  Form Pemesanan
+                </h1>
+                <p className="text-gray-600 mt-2">Lengkapi data untuk menyelesaikan pesanan Anda</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                      </svg>
+                      Nama Pemesan
                     </label>
                     <input 
                       type="text" 
                       value={form.nama} 
                       disabled 
-                      className="w-full border border-gray-300 px-4 py-3 rounded-xl bg-gray-50 text-gray-600 cursor-not-allowed"
+                      className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl bg-gray-50 font-medium text-gray-700 focus:outline-none" 
                     />
-                    <p className="text-xs text-gray-500 mt-1">Nama diambil dari profil akun Anda</p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nomor WhatsApp *
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                      </svg>
+                      Nomor WhatsApp
                     </label>
                     <input
                       type="tel"
-                      className="w-full border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 px-4 py-3 rounded-xl transition-colors duration-200"
+                      className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:border-green-500 focus:outline-none transition-colors duration-200"
                       value={form.nomor}
-                      onChange={(e) => handleInputChange('nomor', e.target.value)}
-                      placeholder="08123456789"
+                      onChange={(e) => setForm({ ...form, nomor: e.target.value })}
+                      placeholder="08xxxxxxxxxx"
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">Format: 08xxxxxxxxxx</p>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Tipe Pesanan *
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Tipe Pesanan
                   </label>
                   <select
                     value={form.tipe}
-                    onChange={(e) => handleInputChange('tipe', e.target.value)}
-                    className="w-full border border-gray-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 px-4 py-3 rounded-xl transition-colors duration-200"
+                    onChange={(e) => setForm({ ...form, tipe: e.target.value })}
+                    className="w-full border-2 border-gray-200 px-4 py-3 rounded-xl focus:border-green-500 focus:outline-none transition-colors duration-200"
                   >
-                    <option value={ORDER_TYPES.DINE_IN}>🍽️ Dine In - Makan di tempat</option>
-                    <option value={ORDER_TYPES.TAKEAWAY}>📦 Takeaway - Bawa pulang</option>
+                    <option value="dine-in">🍽️ Dine In - Makan di tempat</option>
+                    <option value="takeaway">📦 Takeaway - Bawa pulang</option>
                   </select>
                 </div>
 
-                {/* Terms Agreement */}
-                <div className="bg-gray-50 p-4 rounded-xl">
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-2xl border border-green-200">
+                  <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    Ringkasan Pesanan
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                      <div className="text-2xl font-bold text-green-700">{cart.reduce((sum, i) => sum + i.jumlah, 0)}</div>
+                      <div className="text-sm text-gray-600">Total Item</div>
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-gray-200">
+                      <div className="text-2xl font-bold text-green-700">Rp {total.toLocaleString()}</div>
+                      <div className="text-sm text-gray-600">Total Harga</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input 
                       type="checkbox" 
                       checked={agree} 
                       onChange={() => setAgree(!agree)}
-                      className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                      className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-green-500"
                     />
                     <div className="text-sm text-gray-700">
-                      <span className="font-semibold">Saya menyetujui</span> ketentuan pemesanan dan konfirmasi pesanan via WhatsApp. 
-                      Saya memahami bahwa pesanan akan diproses setelah konfirmasi ini.
+                      <span className="font-semibold">Saya menyetujui</span> ketentuan pemesanan 
                     </div>
                   </label>
                 </div>
 
-                {/* Order Summary */}
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-xl border border-green-200">
-                  <h3 className="font-semibold text-green-800 mb-4 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    Ringkasan Pesanan
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-gray-600">Total Item</p>
-                      <p className="font-bold text-lg text-gray-800">{cartSummary.totalItems}</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-gray-600">Total Harga</p>
-                      <p className="font-bold text-lg text-green-700">Rp {cartSummary.totalPrice.toLocaleString()}</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg">
-                      <p className="text-gray-600">Poin Loyalty</p>
-                      <p className="font-bold text-lg text-amber-600">+{cartSummary.loyaltyPoints}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isProcessing || !agree || cart.length === 0}
-                  className={`w-full py-4 rounded-xl font-bold text-white transition-all duration-200 ${
-                    isProcessing || !agree || cart.length === 0
+                  disabled={isProcessing || !agree}
+                  className={`w-full py-4 rounded-xl font-bold text-white transform transition-all duration-200 ${
+                    isProcessing || !agree 
                       ? "bg-gray-400 cursor-not-allowed" 
-                      : "bg-green-700 hover:bg-green-800 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                      : "bg-gradient-to-r from-green-700 to-green-800 hover:scale-105 hover:shadow-lg"
                   }`}
                 >
                   {isProcessing ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <LoadingSpinner />
-                      Memproses Pesanan...
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-2">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
-                      Konfirmasi Pesanan
-                    </div>
+                      Memproses Pesanan...
+                    </span>
+                  ) : (
+                    "🚀 Konfirmasi Pesanan"
                   )}
                 </button>
               </form>
