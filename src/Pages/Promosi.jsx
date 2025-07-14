@@ -196,7 +196,7 @@ export default function PromoManagement() {
                 onClick={handleAddOrUpdate}
                 className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
               >
-                {editingId ? "💾 Update Promo" : "➕ Tambah Promo"}
+                {editingId ? " Update Promo" : "Tambah Promo"}
               </button>
             </div>
           </div>
@@ -268,7 +268,7 @@ export default function PromoManagement() {
                         </span>
                       ) : (
                         <span className="inline-flex px-3 py-1 text-xs font-bold rounded-full bg-red-100 text-red-800 border border-red-200">
-                          ❌ Nonaktif
+                           Nonaktif
                         </span>
                       )}
                     </td>
@@ -278,13 +278,14 @@ export default function PromoManagement() {
                           className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transform hover:scale-105 transition-all duration-150"
                           onClick={() => handleEdit(promo)}
                         >
-                          ✏️ Edit
+                          
+                           Edit
                         </button>
                         <button
                           className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transform hover:scale-105 transition-all duration-150"
                           onClick={() => handleDelete(promo.id)}
                         >
-                          🗑️ Hapus
+                          Hapus
                         </button>
                       </div>
                     </td>

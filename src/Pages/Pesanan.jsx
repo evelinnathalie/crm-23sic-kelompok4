@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { supabase } from "../supabase";
+import { useEffect, useState } from "react";
+import { supabase } from "../supabase"; // Make sure to import your supabase config
 
 export default function Pesanan() {
-  /* --------------------- state --------------------- */
   const [pesanan, setPesanan] = useState([]);
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [totalHariIni, setTotalHariIni] = useState(0);
   const [totalSemua, setTotalSemua] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* ----------------- ambil data sekali ----------------- */
+  // Fetch data once on component mount
   useEffect(() => {
     fetchData();
   }, []);
@@ -38,7 +37,6 @@ export default function Pesanan() {
     setIsLoading(false);
   };
 
-  /* ---------------- update status ---------------- */
   const handleUpdateStatus = async (id, newStatus) => {
     const { error } = await supabase
       .from("orders")
@@ -77,7 +75,7 @@ export default function Pesanan() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -143,8 +141,8 @@ export default function Pesanan() {
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 hover:bg-white transition-all duration-200"
                 >
                   <option value="Semua">📋 Semua Status</option>
-                  <option value="Diproses">⏳ Diproses</option>
-                  <option value="Selesai">✅ Selesai</option>
+                  <option value="Diproses">Diproses</option>
+                  <option value="Selesai"> Selesai</option>
                 </select>
               </div>
 
@@ -172,9 +170,6 @@ export default function Pesanan() {
                     📅 Tanggal
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    🕒 Waktu
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     💵 Total Bayar
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
@@ -194,7 +189,7 @@ export default function Pesanan() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-12">
+                    <td colSpan={7} className="text-center py-12">
                       <div className="flex flex-col items-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
                         <p className="text-gray-500 text-lg font-medium">Memuat data pesanan...</p>
@@ -203,7 +198,7 @@ export default function Pesanan() {
                   </tr>
                 ) : filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="text-center py-12">
+                    <td colSpan={7} className="text-center py-12">
                       <div className="flex flex-col items-center">
                         <div className="text-6xl mb-4">🍽️</div>
                         <p className="text-gray-500 text-lg font-medium">
@@ -226,12 +221,6 @@ export default function Pesanan() {
                           day: "2-digit",
                           month: "short",
                           year: "numeric"
-                        })}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-700">{new Date(item.created_at).toLocaleTimeString("id-ID", {
-                          hour: "2-digit",
-                          minute: "2-digit"
                         })}</div>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -266,14 +255,14 @@ export default function Pesanan() {
                             className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                             disabled={item.status === "Selesai"}
                           >
-                            ✅ Selesai
+                             Selesai
                           </button>
                           <button
                             onClick={() => handleUpdateStatus(item.id, "Diproses")}
                             className="px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1"
                             disabled={item.status === "Diproses"}
                           >
-                            ⏳ Diproses
+                             Diproses
                           </button>
                         </div>
                       </td>

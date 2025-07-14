@@ -89,9 +89,9 @@ export default function Event() {
   const getStatusStyle = (status) => {
     switch (status) {
       case "Akan Datang":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Selesai":
         return "bg-green-100 text-green-800 border-green-200";
+      case "Selesai":
+        return "bg-blue-100 text-blue-800 border-blue-200";
       case "Dibatalkan":
         return "bg-red-100 text-red-800 border-red-200";
       default:
@@ -123,7 +123,7 @@ export default function Event() {
 
         {/* Form Card */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
             <h2 className="text-xl font-semibold text-white">
               {editingId ? "Edit Event" : "Tambah Event Baru"}
             </h2>
@@ -140,7 +140,7 @@ export default function Event() {
                   value={formData.eventName}
                   onChange={handleInputChange}
                   placeholder="Masukkan nama event"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
                 />
               </div>
 
@@ -152,7 +152,7 @@ export default function Event() {
                   value={formData.organizer}
                   onChange={handleInputChange}
                   placeholder="Nama penyelenggara"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
                 />
               </div>
 
@@ -163,7 +163,7 @@ export default function Event() {
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white"
                 />
               </div>
 
@@ -175,7 +175,7 @@ export default function Event() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="Alamat atau lokasi event"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
                 />
               </div>
 
@@ -186,7 +186,7 @@ export default function Event() {
                   name="status"
                   value={formData.status}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white"
                 >
                   <option value="Akan Datang">Akan Datang</option>
                   <option value="Selesai">Selesai</option>
@@ -200,7 +200,7 @@ export default function Event() {
                   name="kategori"
                   value={formData.kategori}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white"
                 >
                   <option value="Workshop">Workshop</option>
                   <option value="Music">Music</option>
@@ -216,7 +216,7 @@ export default function Event() {
                   value={formData.image}
                   onChange={handleInputChange}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
                 />
               </div>
 
@@ -225,9 +225,9 @@ export default function Event() {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleSubmit}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-sm"
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transform hover:scale-105 transition-all duration-200 shadow-lg"
                   >
-                    {editingId ? "Update" : "Tambah"}
+                    {editingId ? "💾 Update Event" : " Tambah Event"}
                   </button>
                   {editingId && (
                     <button
@@ -245,7 +245,7 @@ export default function Event() {
 
         {/* Events Table */}
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+          <div className="bg-gradient-to-r from-green-600 to-green-700 px-6 py-4">
             <h2 className="text-xl font-semibold text-white">Daftar Event</h2>
           </div>
 
@@ -276,10 +276,7 @@ export default function Event() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {events.length > 0 ? (
                   events.map((event) => (
-                    <tr
-                      key={event.id}
-                      className={`hover:bg-gray-50 transition-colors duration-200 ${editingId === event.id ? 'bg-blue-50' : ''}`}
-                    >
+                    <tr key={event.id} className={`hover:bg-green-50 transition-colors duration-200 ${editingId === event.id ? 'bg-green-50' : ''}`}>
                       <td className="px-6 py-4">
                         {event.image ? (
                           <img
@@ -293,23 +290,11 @@ export default function Event() {
                           </div>
                         )}
                       </td>
+                      <td className="px-6 py-4">{event.eventName}</td>
+                      <td className="px-6 py-4">{event.organizer}</td>
+                      <td className="px-6 py-4">{event.date}</td>
                       <td className="px-6 py-4">
-                        <div>
-                          <div className="font-medium text-gray-900">{event.eventName}</div>
-                          <div className="text-sm text-gray-500">{getCategoryIcon(event.kategori)} {event.kategori}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-gray-900">{event.organizer}</td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="text-gray-900">{event.date}</div>
-                          <div className="text-sm text-gray-500">{event.location}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(event.status)}`}
-                        >
+                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusStyle(event.status)}`}>
                           {event.status}
                         </span>
                       </td>
@@ -317,7 +302,7 @@ export default function Event() {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleEdit(event)}
-                            className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
                           >
                             Edit
                           </button>
@@ -334,7 +319,10 @@ export default function Event() {
                 ) : (
                   <tr>
                     <td colSpan="6" className="px-6 py-12 text-center">
-                      <div className="text-xl text-gray-400">Belum ada event tersedia</div>
+                      <div className="flex flex-col items-center">
+                        <div className="text-6xl mb-4">📋</div>
+                        <p className="text-gray-500 text-lg font-medium">Belum ada event tersedia</p>
+                      </div>
                     </td>
                   </tr>
                 )}

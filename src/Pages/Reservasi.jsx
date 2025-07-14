@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase } from "../supabase";
+import { supabase } from "../supabase"; // Make sure to import your supabase config
 
 export default function Reservasi() {
   const [data, setData] = useState([]);
@@ -160,13 +160,7 @@ export default function Reservasi() {
                     📅 Tanggal
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    🕒 Waktu
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     👥 Jumlah Tamu
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                    🎉 Jenis Acara
                   </th>
                   <th className="px-6 py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">
                     📊 Status
@@ -179,7 +173,7 @@ export default function Reservasi() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12">
+                    <td colSpan={5} className="text-center py-12">
                       <div className="flex flex-col items-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
                         <p className="text-gray-500 text-lg font-medium">Memuat data reservasi...</p>
@@ -188,7 +182,7 @@ export default function Reservasi() {
                   </tr>
                 ) : filteredData.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-12">
+                    <td colSpan={5} className="text-center py-12">
                       <div className="flex flex-col items-center">
                         <div className="text-6xl mb-4">🍽️</div>
                         <p className="text-gray-500 text-lg font-medium">
@@ -223,20 +217,8 @@ export default function Reservasi() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <span className="text-lg mr-2">🕒</span>
-                          <span className="text-sm text-gray-700">{item.waktu}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
                           <span className="text-lg mr-2">👥</span>
                           <span className="text-sm font-semibold text-gray-900">{item.jumlah} orang</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <span className="text-lg mr-2">🎉</span>
-                          <span className="text-sm text-gray-700">{item.acara || "Tidak disebutkan"}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 text-center whitespace-nowrap">
@@ -261,14 +243,14 @@ export default function Reservasi() {
                             className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 transform hover:scale-105 transition-all duration-150 disabled:opacity-50"
                             disabled={item.status === "Diterima"}
                           >
-                            ✅ Terima
+                             Terima
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(item.id, "Ditolak")}
                             className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 transform hover:scale-105 transition-all duration-150 disabled:opacity-50"
                             disabled={item.status === "Ditolak"}
                           >
-                            ❌ Tolak
+                             Tolak
                           </button>
                         </div>
                       </td>
